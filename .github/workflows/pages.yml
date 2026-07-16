@@ -1,0 +1,72 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Choose Pages base path
+        run: |
+          repo_name="${GITHUB_REPOSITORY#*/}"
+          if [ "$repo_name" = "${GITHUB_REPOSITORY_OWNER}.github.io" ]; then
+            echo "GITHUB_PAGES_BASE_PATH=/" >> "$GITHUB_ENV"
+          else
+            echo "GITHUB_PAGES_BASE_PATH=/$repo_name/" >> "$GITHUB_ENV"
+          fi
+
+      - name: Validate deployment configuration
+        run: pnpm test
+
+      - name: Build static site
+        run: pnpm build:pages
+        env:
+          # Optional repository overrides:
+          # VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          # VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://edqiejhbdnjtknjmxjhj.supabase.co' }}
+          VITE_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_TVFeLmVp707HTMxCcwVy_A_rr_Rg93W' }}
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: dist-pages
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
