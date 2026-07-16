@@ -481,6 +481,53 @@
     };
   }
 
+  function seedItemKey(item) {
+    return `${String(item?.course_id || "")}\u0000${String(item?.id || "")}`;
+  }
+
+  // Bundled course material is content-only: it can fill an empty cloud account
+  // without replacing a learner's existing course details or review progress.
+  function mergeSeedWorkspace(workspaceValue, seedValue) {
+    const merged = {
+      courses: clone(workspaceValue?.courses || []),
+      review_items: clone(workspaceValue?.review_items || []),
+    };
+    const coursesById = new Map(merged.courses.map((course) => [course.id, course]));
+    const knownItems = new Set(merged.review_items.map(seedItemKey));
+
+    for (const sourceCourse of seedValue?.courses || []) {
+      const courseId = String(sourceCourse?.id || "").trim();
+      if (!courseId) continue;
+      const seededCourse = clone(sourceCourse);
+      const existing = coursesById.get(courseId);
+      if (!existing) {
+        merged.courses.push(seededCourse);
+        coursesById.set(courseId, seededCourse);
+        continue;
+      }
+
+      existing.card_ids = [...new Set([...(existing.card_ids || []), ...(seededCourse.card_ids || [])])];
+      existing.source_files = [...new Set([...(existing.source_files || []), ...(seededCourse.source_files || [])])];
+      if (!Array.isArray(existing.selected_card_ids) || !existing.selected_card_ids.length) {
+        existing.selected_card_ids = clone(seededCourse.selected_card_ids || []);
+      }
+    }
+
+    for (const sourceItem of seedValue?.review_items || []) {
+      const item = clone(sourceItem);
+      if (!coursesById.has(item.course_id)) continue;
+      const key = seedItemKey(item);
+      if (knownItems.has(key)) continue;
+      merged.review_items.push(item);
+      knownItems.add(key);
+    }
+
+    return {
+      courses: merged.courses.map(migrateKnownCourseSelection),
+      review_items: merged.review_items,
+    };
+  }
+
   function workspaceFingerprint(workspace) {
     const normalized = {
       courses: [...(workspace?.courses || [])].sort((a, b) => String(a.id).localeCompare(String(b.id))),
@@ -495,6 +542,7 @@
     compareReviewAnswer,
     dashboardFromWorkspace,
     masteryLabel,
+    mergeSeedWorkspace,
     mergeWorkspace,
     normalizeAnswer,
     recordReviewResult,

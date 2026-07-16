@@ -31,6 +31,14 @@ const $ = (id) => document.getElementById(id);
 const workspace = window.EnglishCoachWorkspace;
 const cloud = window.EnglishCoachCloud;
 
+function bundledVideoCourseSeed() {
+  const seed = window.EnglishCoachVideoCourseSeed;
+  if (typeof seed?.workspace !== "function") {
+    return { courses: [], review_items: [] };
+  }
+  return seed.workspace();
+}
+
 function todayIso() {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
@@ -381,7 +389,10 @@ async function synchronizeWorkspace({ silent = false } = {}) {
     ]);
     const remote = stripCloudMetadata(remoteValue);
     const local = localValue ? stripCloudMetadata(localValue) : { courses: [], review_items: [] };
-    const merged = workspace.mergeWorkspace(local, remote);
+    const merged = workspace.mergeSeedWorkspace(
+      workspace.mergeWorkspace(local, remote),
+      bundledVideoCourseSeed(),
+    );
     const mergedFingerprint = workspace.workspaceFingerprint(merged);
 
     if (localValue && remote.courses.length && mergedFingerprint !== workspace.workspaceFingerprint(local)) {
