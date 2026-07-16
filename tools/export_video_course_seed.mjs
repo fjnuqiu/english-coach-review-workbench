@@ -12,6 +12,33 @@ const videoCourseIds = [
   "pet-decision-and-care",
 ];
 
+const englishCourseMetadata = Object.freeze({
+  "pet-food-safety": {
+    title: "Articles in Pet Food Safety",
+    summary: "Practice a, an, and the through pet-food safety, including human foods that cats and dogs should not eat.",
+  },
+  "pet-supplies": {
+    title: "Pet Supplies",
+    summary: "Learn to ask about and describe common pet supplies, including collars, litter boxes, parrots, and cages.",
+  },
+  "pet-grooming-and-attachment": {
+    title: "Pet Grooming & Attachment",
+    summary: "Practice vocabulary for grooming, care, training, and the emotional bond with a new pet.",
+  },
+  "puppy-habits": {
+    title: "Puppy Habits",
+    summary: "Talk about a puppy's sleeping habits, daily care, and the love puppies give their owners.",
+  },
+  "lets-get-a-puppy-speaking": {
+    title: "Let's Get a Puppy — Speaking",
+    summary: "Practice a conversation about getting a puppy, including responsibility, training, and caring for a dog.",
+  },
+  "pet-decision-and-care": {
+    title: "Getting a Pet: Decisions & Care",
+    summary: "Ask for advice and discuss the practical decisions involved in caring for a pet.",
+  },
+});
+
 const [courses, reviewItems] = await Promise.all([
   readFile(resolve(projectRoot, "state/courses.json"), "utf8").then(JSON.parse),
   readFile(resolve(projectRoot, "state/review-items.json"), "utf8").then(JSON.parse),
@@ -21,11 +48,12 @@ const byCourseId = new Map(courses.map((course) => [course.id, course]));
 const selectedCourses = videoCourseIds.map((courseId) => {
   const source = byCourseId.get(courseId);
   if (!source) throw new Error(`Missing video course: ${courseId}`);
+  const english = englishCourseMetadata[courseId];
   return {
     id: source.id,
-    title: source.title,
-    summary_zh: source.summary_zh,
-    source_files: ["视频课程"],
+    title: english.title,
+    summary_zh: english.summary,
+    source_files: ["Video course"],
     card_ids: [...(source.card_ids || [])],
     order: source.order,
     selected_card_ids: [...(source.selected_card_ids || [])],
@@ -46,7 +74,7 @@ const selectedItems = reviewItems
     next_due: "2025-01-01",
     interval_days: 1,
     example: item.example || item.item,
-    note: item.note || "按中文意思完整复述英文，参考答案默认隐藏。",
+    note: "Translate the Chinese prompt into English. The reference answer is hidden by default.",
     prompt: item.prompt,
     accepted_answers: [...(item.accepted_answers || [])],
     history: [],
