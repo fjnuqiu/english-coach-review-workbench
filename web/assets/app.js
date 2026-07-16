@@ -39,6 +39,10 @@ function bundledVideoCourseSeed() {
   return seed.workspace();
 }
 
+const bundledCourseMetadata = new Map(
+  bundledVideoCourseSeed().courses.map((course) => [course.id, course]),
+);
+
 function todayIso() {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Shanghai",
@@ -67,7 +71,7 @@ async function apiJson(path, options = {}) {
     payload = {};
   }
   if (!response.ok) {
-    throw new Error(payload.message || payload.error || `请求失败 (${response.status})`);
+    throw new Error(payload.message || payload.error || `Request failed (${response.status})`);
   }
   return payload;
 }
@@ -121,21 +125,21 @@ function selectedDate() {
 }
 
 async function refreshDashboard() {
-  setConnectionStatus(state.user ? "同步中" : "检查中");
+  setConnectionStatus(state.user ? "Syncing" : "Checking");
   if (hasCloudWorkspace() && state.localBackendAvailable === false) {
     state.dashboard = workspace.dashboardFromWorkspace(
       state.cloudCourses,
       state.cloudReviewItems,
       selectedDate(),
     );
-    setConnectionStatus("云端已同步");
+    setConnectionStatus("Cloud synced");
     renderDashboard();
     return;
   }
   try {
     state.dashboard = await apiJson(`/api/dashboard?date=${encodeURIComponent(selectedDate())}`);
     state.localBackendAvailable = true;
-    setConnectionStatus(state.user ? "本机 + 云端" : "本机已连接");
+    setConnectionStatus(state.user ? "Local + cloud" : "Local connected");
     configureLocalOnlyTools();
     renderDashboard();
   } catch (error) {
@@ -147,15 +151,29 @@ async function refreshDashboard() {
         state.cloudReviewItems,
         selectedDate(),
       );
-      setConnectionStatus("云端已同步");
+      setConnectionStatus("Cloud synced");
       renderDashboard();
       return;
     }
-    setConnectionStatus(state.cloudConfigured ? "等待登录" : "未配置同步");
+    setConnectionStatus(state.cloudConfigured ? "Sign in to sync" : "Sync not configured");
     $("courseList").innerHTML = state.cloudConfigured
-      ? '<div class="empty-state"><strong>登录后查看你的课程</strong><p>使用右上角“登录同步”，即可在这台设备加载学习内容。</p></div>'
-      : `<div class="empty-state">无法读取课程：${escapeHtml(error.message)}</div>`;
+      ? '<div class="empty-state"><strong>Sign in to see your courses</strong><p>Use “Sign in to sync” in the top-right corner to load your learning content on this device.</p></div>'
+      : `<div class="empty-state">Could not load courses: ${escapeHtml(error.message)}</div>`;
   }
+}
+
+function bundledCoursePresentation(course) {
+  const seededCourse = bundledCourseMetadata.get(course?.id);
+  if (seededCourse) {
+    return {
+      title: seededCourse.title || course?.title || "Untitled course",
+      summary: seededCourse.summary_zh || course?.summary || course?.summary_zh || "",
+    };
+  }
+  return {
+    title: course?.title || "Untitled course",
+    summary: course?.summary || course?.summary_zh || "",
+  };
 }
 
 function renderDashboard() {
@@ -170,8 +188,9 @@ function renderDashboard() {
   if (state.selectedCourseId) {
     const currentCourse = courses.find((course) => course.id === state.selectedCourseId);
     if (currentCourse && !$("courseReviewWorkspace").hidden) {
-      $("activeCourseTitle").textContent = currentCourse.title;
-      $("activeCourseSummary").textContent = currentCourse.summary_zh || "";
+      const presentation = bundledCoursePresentation(currentCourse);
+      $("activeCourseTitle").textContent = presentation.title;
+      $("activeCourseSummary").textContent = presentation.summary;
     }
   }
 }
@@ -204,31 +223,32 @@ function reviewModeMeta(mode) {
   if (normalizedMode === "selected") {
     return {
       label: "SELECTED CONTENT",
-      description: "精选内容：课程中必须掌握、需要反复练习的核心表达。",
-      completeLabel: "精选内容练习完成",
-      emptyTitle: "这门课程的精选内容已完成",
-      emptyDescription: "核心内容会根据掌握情况继续安排复习。",
+      description: "Selected content: the core expressions you need to master and practice repeatedly.",
+      completeLabel: "Selected-content practice complete",
+      emptyTitle: "Selected content is complete",
+      emptyDescription: "Core content will be scheduled again based on the mastery you record.",
     };
   }
   if (normalizedMode === "full") {
     return {
       label: "FULL CONTENT",
-      description: "完整内容：按视频课程顺序练习全部可确认内容。",
-      completeLabel: "完整内容练习完成",
-      emptyTitle: "这门课程的完整内容已完成",
-      emptyDescription: "你可以返回课程，继续练习精选内容或今日到期内容。",
+      description: "Full content: practice every confirmed item in the order of the video course.",
+      completeLabel: "Full-content practice complete",
+      emptyTitle: "Full content is complete",
+      emptyDescription: "Return to the course to continue with selected content or items due today.",
     };
   }
   return {
     label: "TODAY'S REVIEW",
-    description: "今日到期：按复习计划练习现在最需要巩固的内容。",
-    completeLabel: "今日任务完成",
-    emptyTitle: "这门课程今天的复习已完成",
-    emptyDescription: "系统会根据本次结果安排下一次复习。",
+    description: "Due today: practice the items that need reinforcement now.",
+    completeLabel: "Today's review complete",
+    emptyTitle: "Today's review is complete",
+    emptyDescription: "Your next review is scheduled from the result you record.",
   };
 }
 
 function courseRow(course) {
+  const presentation = bundledCoursePresentation(course);
   const expanded = course.id === state.expandedCourseId;
   const dueCards = courseCardsForMode(course, "due");
   const selectedCards = courseCardsForMode(course, "selected");
@@ -236,53 +256,53 @@ function courseRow(course) {
   const dueCount = Number(course.due_count ?? dueCards.length);
   const selectedCount = Number(course.selected_total_count ?? course.selected_count ?? selectedCards.length);
   const fullCount = Number(course.full_total_count ?? course.full_count ?? course.total_count ?? fullCards.length);
-  const dueLabel = dueCount > 0 ? `${dueCount} 条今日到期` : "今日已清空";
+  const dueLabel = dueCount > 0 ? `${dueCount} due today` : "Nothing due today";
   const masteryScore = Math.max(0, Math.min(100, coursePriorityMastery(course)));
   const overallMasteryScore = Math.max(0, Math.min(100, Number(course.mastery_score || 0)));
   const masteryLabel = selectedCount > 0
-    ? (course.selected_mastery_label || workspace.masteryLabel(masteryScore, true))
-    : (course.mastery_label || workspace.masteryLabel(masteryScore, Number(course.total_count || 0) > 0));
-  const masteryTitle = selectedCount > 0 ? "核心熟练度" : "熟练度";
+    ? workspace.masteryLabel(masteryScore, true)
+    : workspace.masteryLabel(masteryScore, Number(course.total_count || 0) > 0);
+  const masteryTitle = selectedCount > 0 ? "Core mastery" : "Mastery";
   return `
     <article class="course-row${expanded ? " expanded" : ""}" data-mastery="${masteryScore >= 70 ? "high" : "low"}">
       <button class="course-summary-button" type="button" aria-expanded="${expanded}" onclick="toggleCourse('${escapeHtml(course.id)}')">
         <span class="course-title-group">
-          <strong>${escapeHtml(course.title)}</strong>
-          <span>${escapeHtml(course.summary_zh || "尚无课程概要")}</span>
+          <strong>${escapeHtml(presentation.title)}</strong>
+          <span>${escapeHtml(presentation.summary || "No course summary yet.")}</span>
         </span>
-        <span class="course-metrics" aria-label="课程数据">
-          <span class="course-metric mastery-metric"><strong>${masteryScore.toFixed(0)}%</strong><span>${selectedCount > 0 ? "核心 · " : ""}${escapeHtml(masteryLabel)}</span></span>
-          <span class="course-metric"><strong>${Number(course.due_count || 0)}</strong><span>待复习</span></span>
-          <span class="course-metric completed-metric"><strong>${Number(course.completed_today || 0)}</strong><span>今日完成</span></span>
-          <span class="course-metric"><strong>${Number(course.total_count || 0)}</strong><span>全部句子</span></span>
+        <span class="course-metrics" aria-label="Course stats">
+          <span class="course-metric mastery-metric"><strong>${masteryScore.toFixed(0)}%</strong><span>${selectedCount > 0 ? "Core · " : ""}${escapeHtml(masteryLabel)}</span></span>
+          <span class="course-metric"><strong>${Number(course.due_count || 0)}</strong><span>Due</span></span>
+          <span class="course-metric completed-metric"><strong>${Number(course.completed_today || 0)}</strong><span>Done today</span></span>
+          <span class="course-metric"><strong>${Number(course.total_count || 0)}</strong><span>Sentences</span></span>
         </span>
         <span class="course-chevron" aria-hidden="true">⌄</span>
       </button>
       <div class="course-detail"${expanded ? "" : " hidden"}>
         <div class="course-detail-grid">
           <div>
-            <p>${escapeHtml(course.summary_zh || "这门课程还没有概要。")}</p>
+            <p>${escapeHtml(presentation.summary || "This course does not have a summary yet.")}</p>
             <div class="course-badges">
               <span class="badge mastery-badge">${masteryTitle} ${masteryScore.toFixed(0)}% · ${escapeHtml(masteryLabel)}</span>
-              ${selectedCount > 0 ? `<span class="badge">完整内容熟练度 ${overallMasteryScore.toFixed(0)}%</span>` : ""}
+              ${selectedCount > 0 ? `<span class="badge">Full-content mastery ${overallMasteryScore.toFixed(0)}%</span>` : ""}
               <span class="badge${course.due_count > 0 ? " due" : ""}">${escapeHtml(dueLabel)}</span>
-              <span class="badge">已掌握 ${Number(course.mastered_count || 0)} / ${Number(course.total_count || 0)}</span>
-              ${course.learned_on ? `<span class="badge">学习于 ${escapeHtml(course.learned_on)}</span>` : ""}
+              <span class="badge">Mastered ${Number(course.mastered_count || 0)} / ${Number(course.total_count || 0)}</span>
+              ${course.learned_on ? `<span class="badge">Learned ${escapeHtml(course.learned_on)}</span>` : ""}
             </div>
             <div class="mastery-track" aria-label="${masteryTitle} ${masteryScore.toFixed(0)}%"><span style="width:${masteryScore}%"></span></div>
           </div>
-          <div class="course-mode-actions" aria-label="选择练习内容">
+          <div class="course-mode-actions" aria-label="Choose practice content">
             <button class="course-mode-button due" type="button" onclick="startCourseReview('${escapeHtml(course.id)}', 'due')"${dueCards.length ? "" : " disabled"}>
-              <strong>今日到期</strong>
-              <small>${dueCount > 0 ? `${dueCount} 条按计划复习` : "今天没有到期内容"}</small>
+              <strong>Due today</strong>
+              <small>${dueCount > 0 ? `${dueCount} scheduled reviews` : "Nothing is due today"}</small>
             </button>
             <button class="course-mode-button selected" type="button" onclick="startCourseReview('${escapeHtml(course.id)}', 'selected')"${selectedCards.length ? "" : " disabled"}>
-              <strong>精选内容（核心必会）</strong>
-              <small>${selectedCount} 条核心表达</small>
+              <strong>Selected content</strong>
+              <small>${selectedCount} core expressions</small>
             </button>
             <button class="course-mode-button full" type="button" onclick="startCourseReview('${escapeHtml(course.id)}', 'full')"${fullCards.length ? "" : " disabled"}>
-              <strong>完整内容（视频全部内容）</strong>
-              <small>${fullCount} 条完整课程内容</small>
+              <strong>Full content</strong>
+              <small>${fullCount} course sentences</small>
             </button>
           </div>
         </div>
@@ -294,8 +314,8 @@ function renderCourses(courses = state.dashboard?.courses || []) {
   courses = sortCourses(courses);
   if (!courses.length) {
     $("courseList").innerHTML = state.localBackendAvailable === false
-      ? '<div class="empty-state"><strong>账号里还没有课程</strong><p>先在 Mac 本地工作台登录同一账号，现有课程会自动迁移到云端。</p></div>'
-      : '<div class="empty-state">还没有课程。点击右上角“导入材料”添加截图或录屏。</div>';
+      ? '<div class="empty-state"><strong>Your account does not have courses yet</strong><p>On sign-in, the six bundled video courses are added automatically. Courses imported in the Mac workspace also sync here.</p></div>'
+      : '<div class="empty-state">No courses yet. Use “Import” in the top-right corner to add screenshots or recordings.</div>';
     return;
   }
   $("courseList").innerHTML = courses.map(courseRow).join("");
@@ -319,16 +339,16 @@ function renderAccountState() {
   $("signedInAccountPanel").hidden = !signedIn;
   $("accountToolButton").classList.toggle("synced", signedIn && state.cloudReady);
   $("accountToolLabel").textContent = signedIn
-    ? (state.user.email || "已登录").split("@")[0]
-    : "登录同步";
+    ? (state.user.email || "Signed in").split("@")[0]
+    : "Sign in to sync";
   if (signedIn) {
-    $("signedInEmail").textContent = state.user.email || "已登录账号";
+    $("signedInEmail").textContent = state.user.email || "Signed-in account";
     $("accountSyncSummary").textContent = state.cloudReady
-      ? `已同步 ${state.cloudCourses.length} 门课程 · ${state.cloudReviewItems.length} 条复习内容`
-      : "正在准备同步";
+      ? `Synced ${state.cloudCourses.length} courses · ${state.cloudReviewItems.length} review items`
+      : "Preparing sync";
   }
   if (!state.cloudConfigured) {
-    $("accountStatus").textContent = "云同步尚未配置；本机复习功能仍可正常使用。";
+    $("accountStatus").textContent = "Cloud sync is not configured. Local review still works normally.";
   }
 }
 
@@ -349,8 +369,8 @@ function openAccountDialog() {
 function accountCredentials() {
   const email = $("accountEmailInput").value.trim().toLowerCase();
   const password = $("accountPasswordInput").value;
-  if (!email.includes("@")) throw new Error("请输入有效邮箱");
-  if (password.length < 6) throw new Error("密码至少需要 6 位");
+  if (!email.includes("@")) throw new Error("Enter a valid email address");
+  if (password.length < 6) throw new Error("Password must be at least 6 characters");
   return { email, password };
 }
 
@@ -381,7 +401,7 @@ async function writeLocalWorkspace(workspaceValue) {
 
 async function synchronizeWorkspace({ silent = false } = {}) {
   if (!state.user || !state.cloudConfigured || state.syncInProgress) return;
-  setAccountBusy(true, silent ? "" : "正在合并本机与云端学习记录…");
+  setAccountBusy(true, silent ? "" : "Merging local and cloud learning records…");
   try {
     const [localValue, remoteValue] = await Promise.all([
       readLocalWorkspace(),
@@ -405,13 +425,13 @@ async function synchronizeWorkspace({ silent = false } = {}) {
     state.cloudCourses = merged.courses;
     state.cloudReviewItems = merged.review_items;
     state.cloudReady = true;
-    $("accountStatus").textContent = `同步完成：${merged.courses.length} 门课程，${merged.review_items.length} 条复习内容。`;
+    $("accountStatus").textContent = `Sync complete: ${merged.courses.length} courses and ${merged.review_items.length} review items.`;
     renderAccountState();
     await refreshDashboard();
   } catch (error) {
     state.cloudReady = false;
-    $("accountStatus").textContent = `同步失败：${error.message}`;
-    if (!silent) showToast(`同步失败：${error.message}`);
+    $("accountStatus").textContent = `Sync failed: ${error.message}`;
+    if (!silent) showToast(`Sync failed: ${error.message}`);
   } finally {
     setAccountBusy(false);
     renderAccountState();
@@ -429,14 +449,14 @@ async function loginAccount(event) {
   if (state.syncInProgress) return false;
   try {
     const { email, password } = accountCredentials();
-    setAccountBusy(true, "正在登录…");
+    setAccountBusy(true, "Signing in…");
     state.user = await cloud.signIn(email, password);
     state.cloudReady = false;
     renderAccountState();
     setAccountBusy(false);
     await synchronizeWorkspace();
   } catch (error) {
-    setAccountBusy(false, `登录失败：${error.message}`);
+    setAccountBusy(false, `Sign-in failed: ${error.message}`);
   }
   return false;
 }
@@ -445,10 +465,10 @@ async function createAccount() {
   if (state.syncInProgress) return;
   try {
     const { email, password } = accountCredentials();
-    setAccountBusy(true, "正在创建账号…");
+    setAccountBusy(true, "Creating account…");
     const result = await cloud.signUp(email, password);
     if (result.needsEmailConfirmation) {
-      $("accountStatus").textContent = "注册成功。请先打开邮箱确认账号，再返回这里登录。";
+      $("accountStatus").textContent = "Account created. Confirm it from your email, then return here to sign in.";
       return;
     }
     state.user = result.user;
@@ -457,7 +477,7 @@ async function createAccount() {
     setAccountBusy(false);
     await synchronizeWorkspace();
   } catch (error) {
-    $("accountStatus").textContent = `注册失败：${error.message}`;
+    $("accountStatus").textContent = `Account creation failed: ${error.message}`;
   } finally {
     setAccountBusy(false);
   }
@@ -465,7 +485,7 @@ async function createAccount() {
 
 async function logoutAccount() {
   if (state.syncInProgress) return;
-  setAccountBusy(true, "正在退出…");
+  setAccountBusy(true, "Signing out…");
   try {
     await cloud.signOut();
     state.user = null;
@@ -473,11 +493,11 @@ async function logoutAccount() {
     state.cloudCourses = [];
     state.cloudReviewItems = [];
     closeCourseReview();
-    $("accountStatus").textContent = "已安全退出。";
+    $("accountStatus").textContent = "Signed out safely.";
     renderAccountState();
     await refreshDashboard();
   } catch (error) {
-    $("accountStatus").textContent = `退出失败：${error.message}`;
+    $("accountStatus").textContent = `Sign-out failed: ${error.message}`;
   } finally {
     setAccountBusy(false);
   }
@@ -498,7 +518,7 @@ async function initializeCloudSync() {
     renderAccountState();
     if (state.user) await synchronizeWorkspace({ silent: true });
   } catch (error) {
-    $("accountStatus").textContent = `云同步连接失败：${error.message}`;
+    $("accountStatus").textContent = `Cloud sync connection failed: ${error.message}`;
   }
 }
 
@@ -518,8 +538,9 @@ function startCourseReview(courseId, mode = "due") {
   state.sessionCards = [...(preferredCards || [])];
   state.currentReviewIndex = 0;
   state.sessionInitialCount = state.sessionCards.length;
-  $("activeCourseTitle").textContent = course.title;
-  $("activeCourseSummary").textContent = course.summary_zh || "";
+  const presentation = bundledCoursePresentation(course);
+  $("activeCourseTitle").textContent = presentation.title;
+  $("activeCourseSummary").textContent = presentation.summary;
   const modeMeta = reviewModeMeta(normalizedMode);
   $("sessionLabel").textContent = modeMeta.label;
   $("reviewModeDescription").textContent = modeMeta.description;
@@ -545,14 +566,14 @@ function activeCard() {
 
 function resetCardFeedback() {
   $("answerInput").value = "";
-  $("answerTarget").textContent = "参考答案默认隐藏。";
+  $("answerTarget").textContent = "The reference answer is hidden by default.";
   $("answerTarget").classList.remove("revealed");
-  $("reviewFeedback").textContent = "先回忆并输入或说出英文，再检查答案。";
+  $("reviewFeedback").textContent = "Recall the English first, then type or say it before checking your answer.";
   $("reviewFeedback").className = "feedback";
   $("diffPanel").hidden = true;
   $("targetDiffText").textContent = "";
   $("answerDiffText").textContent = "";
-  $("coreCoverage").textContent = "匹配度 0%";
+  $("coreCoverage").textContent = "Match 0%";
 }
 
 function renderActiveCard() {
@@ -566,13 +587,13 @@ function renderActiveCard() {
   const progress = Math.round((completedInSession / denominator) * 100);
   const modeMeta = reviewModeMeta(state.sessionMode);
   $("sessionProgressBar").style.width = `${empty ? 100 : progress}%`;
-  $("sessionProgressText").textContent = empty ? modeMeta.completeLabel : `已完成 ${completedInSession} 条`;
+  $("sessionProgressText").textContent = empty ? modeMeta.completeLabel : `${completedInSession} complete`;
   $("reviewPositionText").textContent = empty ? `${state.sessionInitialCount} / ${state.sessionInitialCount}` : `${state.currentReviewIndex + 1} / ${state.sessionCards.length}`;
   $("reviewEmptyTitle").textContent = modeMeta.emptyTitle;
   $("reviewEmptyDescription").textContent = modeMeta.emptyDescription;
   if (!card) return;
   resetCardFeedback();
-  $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "请回忆这句话的英文表达。";
+  $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
   $("previousReviewButton").disabled = state.currentReviewIndex <= 0;
   $("nextReviewButton").disabled = state.currentReviewIndex >= state.sessionCards.length - 1;
 }
@@ -601,7 +622,7 @@ function checkReviewAnswer() {
   if (!card) return;
   const answer = $("answerInput").value.trim();
   if (!answer) {
-    $("reviewFeedback").textContent = "先输入英文或完成一次语音输入。";
+    $("reviewFeedback").textContent = "Type your English or complete a voice input first.";
     $("reviewFeedback").className = "feedback warning";
     return;
   }
@@ -616,15 +637,15 @@ function checkReviewAnswer() {
   $("diffPanel").hidden = false;
   $("targetDiffText").innerHTML = renderDiffTokens(comparison.targetTokens, comparison.missing, "token-missing");
   $("answerDiffText").innerHTML = renderDiffTokens(comparison.answerTokens, comparison.extra, "token-extra");
-  $("coreCoverage").textContent = `匹配度 ${comparison.coverage}%`;
+  $("coreCoverage").textContent = `Match ${comparison.coverage}%`;
   if (comparison.exact) {
-    $("reviewFeedback").textContent = "表达准确，可以标记为“会”。";
+    $("reviewFeedback").textContent = "Accurate expression. You can mark it as Got it.";
     $("reviewFeedback").className = "feedback good";
   } else if (comparison.coreCorrect) {
-    $("reviewFeedback").textContent = "核心意思正确。红色部分是遗漏或不同之处，不要求逐字一致。";
+    $("reviewFeedback").textContent = "The core meaning is correct. Red text marks missing or different words; an exact word-for-word match is not required.";
     $("reviewFeedback").className = "feedback good";
   } else {
-    $("reviewFeedback").textContent = "核心信息还不完整。对照红色部分再说一次，然后按真实掌握情况评分。";
+    $("reviewFeedback").textContent = "The core information is still incomplete. Use the red text to try again, then rate your real mastery.";
     $("reviewFeedback").className = "feedback warning";
   }
 }
@@ -646,7 +667,7 @@ async function submitReviewResult(result) {
   if (!card) return;
   try {
     if (state.localBackendAvailable === false) {
-      if (!state.user) throw new Error("请先登录账号");
+      if (!state.user) throw new Error("Sign in to your account first");
       state.cloudReviewItems = workspace.recordReviewResult(
         state.cloudReviewItems,
         card.id,
@@ -662,7 +683,7 @@ async function submitReviewResult(result) {
         body: JSON.stringify({ item_id: card.id, result, date: selectedDate() }),
       });
     }
-    const labels = { pass: "已掌握", shaky: "已标记不熟", fail: "已安排近期重练" };
+    const labels = { pass: "Marked as got it", shaky: "Marked as shaky", fail: "Scheduled for an early retry" };
     showToast(labels[result]);
     state.sessionCards.splice(state.currentReviewIndex, 1);
     if (state.currentReviewIndex >= state.sessionCards.length) {
@@ -672,7 +693,7 @@ async function submitReviewResult(result) {
     await refreshDashboard();
     if (state.localBackendAvailable === true) scheduleCloudSync();
   } catch (error) {
-    showToast(`保存失败：${error.message}`);
+    showToast(`Could not save: ${error.message}`);
   }
 }
 
@@ -684,14 +705,14 @@ function setReviewRecordingUi(recording) {
   state.reviewRecording = recording;
   $("reviewSpeechButton").disabled = recording;
   $("reviewStopButton").disabled = !recording;
-  $("reviewSpeechButton").textContent = recording ? "录音中" : "开始录音";
+  $("reviewSpeechButton").textContent = recording ? "Recording…" : "Start recording";
 }
 
 function startReviewSpeech() {
   if (state.reviewRecording) return;
   const Recognition = speechRecognitionConstructor();
   if (!Recognition) {
-    showToast("当前浏览器不支持语音识别，请使用 Chrome 或 Safari。 ");
+    showToast("Speech recognition is not supported in this browser. Please use Chrome or Safari.");
     return;
   }
   const recognition = new Recognition();
@@ -716,7 +737,7 @@ function startReviewSpeech() {
   };
   recognition.onerror = (event) => {
     if (event.error !== "aborted" && event.error !== "no-speech") {
-      showToast(`录音识别失败：${event.error}`);
+      showToast(`Speech recognition failed: ${event.error}`);
     }
   };
   recognition.onend = () => {
@@ -732,7 +753,7 @@ function startReviewSpeech() {
     recognition.start();
   } catch (error) {
     setReviewRecordingUi(false);
-    showToast(`无法开始录音：${error.message}`);
+    showToast(`Could not start recording: ${error.message}`);
   }
 }
 
@@ -749,7 +770,7 @@ function stopReviewSpeech() {
 
 function speakEnglish(text) {
   if (!text || !("speechSynthesis" in window)) {
-    showToast("当前浏览器无法播放语音。");
+    showToast("This browser cannot play speech.");
     return;
   }
   window.speechSynthesis.cancel();
@@ -779,14 +800,14 @@ function setChineseRecordingUi(recording) {
   state.chineseRecording = recording;
   $("chineseSpeechButton").disabled = recording;
   $("chineseSpeechStopButton").disabled = !recording;
-  $("chineseSpeechButton").textContent = recording ? "录音中" : "开始录音";
+  $("chineseSpeechButton").textContent = recording ? "Recording…" : "Start recording";
 }
 
 function startChineseTranslateSpeech() {
   if (state.chineseRecording) return;
   const Recognition = speechRecognitionConstructor();
   if (!Recognition) {
-    showToast("当前浏览器不支持语音识别，请直接输入中文。 ");
+    showToast("Speech recognition is not supported in this browser. Type your Chinese sentence instead.");
     return;
   }
   const recognition = new Recognition();
@@ -809,7 +830,7 @@ function startChineseTranslateSpeech() {
   };
   recognition.onerror = (event) => {
     if (event.error !== "aborted" && event.error !== "no-speech") {
-      showToast(`录音识别失败：${event.error}`);
+      showToast(`Speech recognition failed: ${event.error}`);
     }
   };
   recognition.onend = () => {
@@ -825,7 +846,7 @@ function startChineseTranslateSpeech() {
     recognition.start();
   } catch (error) {
     setChineseRecordingUi(false);
-    showToast(`无法开始录音：${error.message}`);
+    showToast(`Could not start recording: ${error.message}`);
   }
 }
 
@@ -843,15 +864,15 @@ function stopChineseTranslateSpeech() {
 async function translateChineseSpeechText() {
   stopChineseTranslateSpeech();
   if (state.localBackendAvailable === false) {
-    $("translationStatus").textContent = "云端网站暂不提供自动翻译，请在 Mac 本地工作台使用。";
+    $("translationStatus").textContent = "Automatic translation is available in the Mac workspace, not on the public website.";
     return;
   }
   const text = $("chineseSpeechInput").value.trim();
   if (!text) {
-    $("translationStatus").textContent = "请先输入或说一句中文。";
+    $("translationStatus").textContent = "Enter or say a Chinese sentence first.";
     return;
   }
-  $("translationStatus").textContent = "正在翻译…";
+  $("translationStatus").textContent = "Translating…";
   try {
     const result = await apiJson("/api/translate", {
       method: "POST",
@@ -859,10 +880,10 @@ async function translateChineseSpeechText() {
       body: JSON.stringify({ text }),
     });
     state.translatedEnglish = result.translation || "";
-    $("translationOutput").textContent = state.translatedEnglish || "未生成翻译。";
-    $("translationStatus").textContent = result.source || "翻译完成";
+    $("translationOutput").textContent = state.translatedEnglish || "No translation was generated.";
+    $("translationStatus").textContent = result.source || "Translation complete";
   } catch (error) {
-    $("translationStatus").textContent = `翻译失败：${error.message}`;
+    $("translationStatus").textContent = `Translation failed: ${error.message}`;
   }
 }
 
@@ -873,37 +894,37 @@ function playTranslatedEnglish() {
 function renderSelectedFiles() {
   const files = [...$("mediaFileInput").files];
   if (!files.length) {
-    $("selectedFiles").textContent = "尚未选择文件";
+    $("selectedFiles").textContent = "No files selected";
     return;
   }
   const names = files.slice(0, 4).map((file) => file.name);
-  const extra = files.length > 4 ? ` 等 ${files.length} 个文件` : "";
-  $("selectedFiles").textContent = `${names.join("、")}${extra}`;
+  const extra = files.length > 4 ? ` and ${files.length - 4} more` : "";
+  $("selectedFiles").textContent = `${names.join(", ")}${extra}`;
 }
 
 async function syncMediaFilesToCodex() {
   if (state.localBackendAvailable === false) {
-    $("mediaStatus").textContent = "请在 Mac 本地工作台导入；整理完成后会同步到这个账号。";
+    $("mediaStatus").textContent = "Import in the Mac workspace; the completed course will then sync to this account.";
     return;
   }
   const files = [...$("mediaFileInput").files];
   if (!files.length) {
-    $("mediaStatus").textContent = "请先选择截图或录屏。";
+    $("mediaStatus").textContent = "Choose screenshots or recordings first.";
     return;
   }
   const form = new FormData();
   files.forEach((file) => form.append("files", file, file.name));
   form.append("date", selectedDate());
-  form.append("slot", "课程导入");
-  form.append("completed", "截图/录屏课程整理");
+  form.append("slot", "Course import");
+  form.append("completed", "Screenshot/recording course organization");
   $("syncMediaButton").disabled = true;
-  $("mediaStatus").textContent = "正在上传并创建 Codex 整理任务…";
+  $("mediaStatus").textContent = "Uploading and creating a Codex organization task…";
   try {
     const result = await apiJson("/api/codex-media-inbox", { method: "POST", body: form });
-    $("mediaStatus").textContent = "上传完成，Codex 正在按课程整理。页面会自动刷新。";
+    $("mediaStatus").textContent = "Upload complete. Codex is organizing the course; this page will refresh automatically.";
     pollCodexJob(result.job_id || result.id);
   } catch (error) {
-    $("mediaStatus").textContent = `导入失败：${error.message}`;
+    $("mediaStatus").textContent = `Import failed: ${error.message}`;
     $("syncMediaButton").disabled = false;
   }
 }
@@ -911,7 +932,7 @@ async function syncMediaFilesToCodex() {
 function pollCodexJob(jobId) {
   window.clearTimeout(state.pollTimer);
   if (!jobId) {
-    $("mediaStatus").textContent = "任务已提交，请稍后刷新课程。";
+    $("mediaStatus").textContent = "The task was submitted. Refresh your courses shortly.";
     $("syncMediaButton").disabled = false;
     return;
   }
@@ -919,24 +940,24 @@ function pollCodexJob(jobId) {
     try {
       const job = await apiJson(`/api/codex-job-status?id=${encodeURIComponent(jobId)}`);
       if (job.status === "completed") {
-        $("mediaStatus").textContent = "整理完成，课程与复习句已加入学习台。";
+        $("mediaStatus").textContent = "Organization complete. The course and review sentences were added to your workspace.";
         $("syncMediaButton").disabled = false;
         $("mediaFileInput").value = "";
         renderSelectedFiles();
         await refreshDashboard();
         scheduleCloudSync();
-        showToast("新课程已整理完成");
+        showToast("Your new course is ready");
         return;
       }
       if (job.status === "failed") {
-        $("mediaStatus").textContent = "Codex 整理失败，请重新提交。";
+        $("mediaStatus").textContent = "Codex could not organize the materials. Please submit them again.";
         $("syncMediaButton").disabled = false;
         return;
       }
-      $("mediaStatus").textContent = "Codex 正在识别课程并生成复习句…";
+      $("mediaStatus").textContent = "Codex is identifying the course and generating review sentences…";
       state.pollTimer = window.setTimeout(check, 2500);
     } catch (error) {
-      $("mediaStatus").textContent = `状态检查失败：${error.message}`;
+      $("mediaStatus").textContent = `Status check failed: ${error.message}`;
       $("syncMediaButton").disabled = false;
     }
   };
@@ -978,6 +999,6 @@ async function initialize() {
 }
 
 initialize().catch((error) => {
-  setConnectionStatus("初始化失败");
-  $("courseList").innerHTML = `<div class="empty-state">页面初始化失败：${escapeHtml(error.message)}</div>`;
+  setConnectionStatus("Initialization failed");
+  $("courseList").innerHTML = `<div class="empty-state">Page initialization failed: ${escapeHtml(error.message)}</div>`;
 });

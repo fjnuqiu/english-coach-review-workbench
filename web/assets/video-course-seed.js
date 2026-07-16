@@ -8,10 +8,10 @@
   "courses": [
     {
       "id": "pet-food-safety",
-      "title": "语法课：a/an/the 的用法（宠物饮食）",
-      "summary_zh": "围绕宠物饮食安全学习冠词语境，说明猫、狗不能随意食用的人类食物。",
+      "title": "Articles in Pet Food Safety",
+      "summary_zh": "Practice a, an, and the through pet-food safety, including human foods that cats and dogs should not eat.",
       "source_files": [
-        "视频课程"
+        "Video course"
       ],
       "card_ids": [
         "are-you-a-pet-owner",
@@ -37,10 +37,10 @@
     },
     {
       "id": "pet-supplies",
-      "title": "词汇课：宠物用品",
-      "summary_zh": "学习 supplies、collar、litter box、parrot 和 cage，并用完整句询问和描述宠物用品。",
+      "title": "Pet Supplies",
+      "summary_zh": "Learn to ask about and describe common pet supplies, including collars, litter boxes, parrots, and cages.",
       "source_files": [
-        "视频课程"
+        "Video course"
       ],
       "card_ids": [
         "getting-a-pet-is-exciting-and-to-get-ready-you-need-a-lot-of-supplies",
@@ -72,10 +72,10 @@
     },
     {
       "id": "pet-grooming-and-attachment",
-      "title": "词汇课：迎接新宠物",
-      "summary_zh": "学习 accompany、company、scratch、groom、grow attached 和 reliable，覆盖新宠物到家后的训练、护理与情感连接。",
+      "title": "Pet Grooming & Attachment",
+      "summary_zh": "Practice vocabulary for grooming, care, training, and the emotional bond with a new pet.",
       "source_files": [
-        "视频课程"
+        "Video course"
       ],
       "card_ids": [
         "the-excitement-of-having-a-new-member-of-the-family-is-usually-accompanied-by-worries-and-confusion",
@@ -109,10 +109,10 @@
     },
     {
       "id": "puppy-habits",
-      "title": "听力课：小狗狗也是宝宝",
-      "summary_zh": "比较婴儿与幼犬在声音、睡眠和依恋方面的相似之处，练习完整听力原文。",
+      "title": "Puppy Habits",
+      "summary_zh": "Talk about a puppy's sleeping habits, daily care, and the love puppies give their owners.",
       "source_files": [
-        "视频课程"
+        "Video course"
       ],
       "card_ids": [
         "babies-and-puppies-are-actually-quite-similar-when-it-comes-to-sounds-sleeping-and-loving-their-parents-and-owners",
@@ -133,10 +133,10 @@
     },
     {
       "id": "lets-get-a-puppy-speaking",
-      "title": "口语课：我们养只小狗吧",
-      "summary_zh": "Jane 和 Brandon 讨论是否养小狗、照顾责任以及改养鹦鹉的建议，并配套核心词汇。",
+      "title": "Let's Get a Puppy — Speaking",
+      "summary_zh": "Practice a conversation about getting a puppy, including responsibility, training, and caring for a dog.",
       "source_files": [
-        "视频课程"
+        "Video course"
       ],
       "card_ids": [
         "hi-jane",
@@ -178,10 +178,10 @@
     },
     {
       "id": "pet-decision-and-care",
-      "title": "综合课：宠物",
-      "summary_zh": "Christina 和 Steve 讨论养宠决定、度假期间的照顾安排、选择斗牛犬、训练和兽医信息。",
+      "title": "Getting a Pet: Decisions & Care",
+      "summary_zh": "Ask for advice and discuss the practical decisions involved in caring for a pet.",
       "source_files": [
-        "视频课程"
+        "Video course"
       ],
       "card_ids": [
         "i-have-great-news-steve",
@@ -232,7 +232,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "The food that you like is not always the best food for your pet.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你喜欢的食物并不总是最适合你宠物的食物。",
       "accepted_answers": [],
       "history": []
@@ -248,7 +248,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Do not feed chocolate to dogs.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "不要给狗喂巧克力。",
       "accepted_answers": [],
       "history": []
@@ -264,7 +264,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Where do you usually get your pet supplies, online or in store?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你通常在哪里购买宠物用品，是网上还是实体店？",
       "accepted_answers": [],
       "history": []
@@ -280,7 +280,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Grooming not only makes your pet pretty, but also keeps it healthy.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "清洁护理不仅让宠物更漂亮，也能让它保持健康。",
       "accepted_answers": [],
       "history": []
@@ -296,7 +296,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Once you win your pet's love and trust, it will become your most reliable friend.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "一旦赢得宠物的爱与信任，它就会成为你最可靠的朋友。",
       "accepted_answers": [],
       "history": []
@@ -312,7 +312,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Well, you have to walk the dog every day, take him to the vet when he's sick, and feed him when he's hungry.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你必须每天遛狗，它生病时带它去看兽医，它饿时给它喂食。",
       "accepted_answers": [],
       "history": []
@@ -328,7 +328,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "You also have to train him, which is a lot of work!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你还必须训练它，这可是很多工作！",
       "accepted_answers": [],
       "history": []
@@ -344,7 +344,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Well, I wanted to ask you for your advice.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "嗯，我正想向你征求建议。",
       "accepted_answers": [],
       "history": []
@@ -360,7 +360,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "For example, kittens can't drink cow's milk.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "例如，小猫不能喝牛奶。",
       "accepted_answers": [],
       "history": []
@@ -376,7 +376,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Chocolate is another dangerous food.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "巧克力是另一种危险的食物。",
       "accepted_answers": [],
       "history": []
@@ -392,7 +392,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "It's an excellent idea to check on the internet before you give human food to pets.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "在给宠物喂人类食物之前，上网查询是个很好的主意。",
       "accepted_answers": [],
       "history": []
@@ -408,7 +408,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "It might not be safe.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "它可能并不安全。",
       "accepted_answers": [],
       "history": []
@@ -424,7 +424,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Should my dog always wear a collar when I take it out for a walk?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我带狗出去散步时，它应该一直戴着项圈吗？",
       "accepted_answers": [],
       "history": []
@@ -440,7 +440,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "An automatic litter box saves time and is easy to clean up.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "自动猫砂盆可以节省时间，而且很容易清理。",
       "accepted_answers": [],
       "history": []
@@ -456,7 +456,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "If you groom an animal, you wash and clean it to make it look better.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "如果你给动物做清洁护理，就是给它洗澡和清洁，让它看起来更好。",
       "accepted_answers": [],
       "history": []
@@ -472,7 +472,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "To grow attached to means to start loving something or someone a lot.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "grow attached to 的意思是开始非常喜爱某物或某人。",
       "accepted_answers": [],
       "history": []
@@ -488,7 +488,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "He is very reliable. If he says he will do something, he will do it.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "他非常可靠。如果他说会做某件事，他就会做到。",
       "accepted_answers": [],
       "history": []
@@ -504,7 +504,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Puppies spend about 14 hours of the day sleeping.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "小狗一天大约有十四个小时在睡觉。",
       "accepted_answers": [],
       "history": []
@@ -520,7 +520,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "While it takes a lot of time to care for a puppy, puppies give a lot of love back to their owners.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "虽然照顾小狗需要很多时间，但小狗也会回馈给主人很多爱。",
       "accepted_answers": [],
       "history": []
@@ -536,7 +536,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I'm going to get us a pet!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我准备给我们养一只宠物！",
       "accepted_answers": [],
       "history": []
@@ -552,7 +552,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Brandon, I don't think buying a pet is a good decision.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "Brandon，我觉得买宠物不是一个好决定。",
       "accepted_answers": [],
       "history": []
@@ -568,7 +568,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "You don't know how to take care of a dog.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你不知道该怎么照顾狗。",
       "accepted_answers": [],
       "history": []
@@ -584,7 +584,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Why don't you get an animal that's easier to take care of?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你为什么不养一种更容易照顾的动物呢？",
       "accepted_answers": [],
       "history": []
@@ -600,7 +600,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "What do you do with them when you go on vacation?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你去度假时会怎么安置它们？",
       "accepted_answers": [],
       "history": []
@@ -616,7 +616,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Are you a pet owner?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你是宠物主人吗？",
       "accepted_answers": [],
       "history": []
@@ -632,7 +632,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "If you have a pet, there is something that you should know.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "如果你养了宠物，有些事情你应该知道。",
       "accepted_answers": [],
       "history": []
@@ -648,7 +648,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Another kind of milk is a better choice — goat's milk!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "另一种奶是更好的选择——羊奶！",
       "accepted_answers": [],
       "history": []
@@ -664,7 +664,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "It can cause them health problems.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "这会给它们造成健康问题。",
       "accepted_answers": [],
       "history": []
@@ -680,7 +680,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Getting a pet is exciting, and to get ready, you need a lot of supplies.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "养宠物令人兴奋，而为了做好准备，你需要很多用品。",
       "accepted_answers": [],
       "history": []
@@ -696,7 +696,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Supplies are items or materials that people need to do a task.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "用品是人们完成一项任务所需要的物品或材料。",
       "accepted_answers": [],
       "history": []
@@ -712,7 +712,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "That village is running low on medical supplies.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "那个村庄的医疗物资快用完了。",
       "accepted_answers": [],
       "history": []
@@ -728,7 +728,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Check online for tips on choosing the perfect dog collar or getting the best litter box for your kitten.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "上网查找如何挑选合适狗项圈或为小猫购买最佳猫砂盆的建议。",
       "accepted_answers": [],
       "history": []
@@ -744,7 +744,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "It is important to make sure your pet feels comfortable.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "确保你的宠物感觉舒适很重要。",
       "accepted_answers": [],
       "history": []
@@ -760,7 +760,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "For example, if you get a parrot, you need to pick a cage that is big enough for it to move around.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "例如，如果你养了一只鹦鹉，你需要选择一个足够大、能让它活动的笼子。",
       "accepted_answers": [],
       "history": []
@@ -776,7 +776,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "A parrot is a bright-colored bird that can be trained to repeat what you say.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "鹦鹉是一种色彩鲜艳、可以训练来重复你所说话语的鸟。",
       "accepted_answers": [],
       "history": []
@@ -792,7 +792,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "The excitement of having a new member of the family is usually accompanied by worries and confusion.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "家里有新成员的兴奋通常伴随着担忧和困惑。",
       "accepted_answers": [],
       "history": []
@@ -808,7 +808,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "To accompany means to happen at the same time.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "accompany 的意思是同时发生。",
       "accepted_answers": [],
       "history": []
@@ -824,7 +824,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Her letter was accompanied by two photos.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "她的信里附有两张照片。",
       "accepted_answers": [],
       "history": []
@@ -840,7 +840,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "To accompany can also mean to go someplace with somebody.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "accompany 也可以表示陪某人去某个地方。",
       "accepted_answers": [],
       "history": []
@@ -856,7 +856,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "The lamb accompanies the little girl everywhere.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "这只小羊无论到哪里都陪着小女孩。",
       "accepted_answers": [],
       "history": []
@@ -872,7 +872,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "To be one's company means to be with someone so they don't feel lonely.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "陪伴某人意味着和对方在一起，让对方不感到孤单。",
       "accepted_answers": [],
       "history": []
@@ -888,7 +888,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Her parents bought her a lamb for company.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "她的父母给她买了一只小羊陪伴她。",
       "accepted_answers": [],
       "history": []
@@ -904,7 +904,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "After you bring home a new cat, show it where the litter box is and train it not to scratch your furniture.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "把新猫带回家后，要告诉它猫砂盆在哪里，并训练它不要抓家具。",
       "accepted_answers": [],
       "history": []
@@ -920,7 +920,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Kittens like to scratch.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "小猫喜欢抓挠。",
       "accepted_answers": [],
       "history": []
@@ -936,7 +936,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "The puppy scratched at the door because he couldn't wait to go out for a walk.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "小狗抓着门，因为它等不及要出去散步了。",
       "accepted_answers": [],
       "history": []
@@ -952,7 +952,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Babies and puppies are actually quite similar when it comes to sounds, sleeping, and loving their parents and owners.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "说到声音、睡眠以及爱自己的父母和主人，婴儿和小狗其实非常相似。",
       "accepted_answers": [],
       "history": []
@@ -968,7 +968,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "While adult dogs might not like human \"baby talk\", puppies do!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "成年狗可能不喜欢人类的“婴儿语”，但小狗喜欢！",
       "accepted_answers": [],
       "history": []
@@ -984,7 +984,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Many parents use a similar style of baby talk when speaking to their newborns.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "许多父母和新生儿说话时会使用类似的婴儿语方式。",
       "accepted_answers": [],
       "history": []
@@ -1000,7 +1000,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Both puppies and babies need and love their sleep!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "小狗和婴儿都需要睡眠，也都喜欢睡觉！",
       "accepted_answers": [],
       "history": []
@@ -1016,7 +1016,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Compare that to newborn babies who spend 16 to 17 hours per day sleeping.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "相比之下，新生儿每天要睡十六到十七个小时。",
       "accepted_answers": [],
       "history": []
@@ -1032,7 +1032,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Puppies, just like babies with their parents, often grow attached to their owners.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "小狗就像依恋父母的婴儿一样，经常会依恋自己的主人。",
       "accepted_answers": [],
       "history": []
@@ -1048,7 +1048,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "It's no wonder why so many humans fall in love with their puppies.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "难怪这么多人会爱上自己的小狗。",
       "accepted_answers": [],
       "history": []
@@ -1064,7 +1064,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Hi, Jane.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "嗨，Jane。",
       "accepted_answers": [],
       "history": []
@@ -1080,7 +1080,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Guess what?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你猜怎么着？",
       "accepted_answers": [],
       "history": []
@@ -1096,7 +1096,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Really?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "真的吗？",
       "accepted_answers": [],
       "history": []
@@ -1112,7 +1112,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Why not?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "为什么不呢？",
       "accepted_answers": [],
       "history": []
@@ -1128,7 +1128,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I've always wanted a puppy.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我一直想养一只小狗。",
       "accepted_answers": [],
       "history": []
@@ -1144,7 +1144,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "It can't be that hard.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "这不可能有那么难。",
       "accepted_answers": [],
       "history": []
@@ -1160,7 +1160,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Lots of people have puppies.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "很多人都养小狗。",
       "accepted_answers": [],
       "history": []
@@ -1176,7 +1176,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I have great news, Steve!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "Steve，我有一个好消息！",
       "accepted_answers": [],
       "history": []
@@ -1192,7 +1192,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "What is it, Christina?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "什么消息，Christina？",
       "accepted_answers": [],
       "history": []
@@ -1208,7 +1208,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I have decided to get a pet!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我已经决定养一只宠物了！",
       "accepted_answers": [],
       "history": []
@@ -1224,7 +1224,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Wow, that's a big decision.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "哇，那可是个重大的决定。",
       "accepted_answers": [],
       "history": []
@@ -1240,7 +1240,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Are you sure?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你确定吗？",
       "accepted_answers": [],
       "history": []
@@ -1256,7 +1256,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Yes, I'm sure!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "是的，我确定！",
       "accepted_answers": [],
       "history": []
@@ -1272,7 +1272,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I have always wanted a pet.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我一直都想养一只宠物。",
       "accepted_answers": [],
       "history": []
@@ -1288,7 +1288,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Who'll take care of your pet when you go on vacation?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你去度假时，谁来照顾你的宠物？",
       "accepted_answers": [],
       "history": []
@@ -1304,7 +1304,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "You have cats and dogs.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你养了猫和狗。",
       "accepted_answers": [],
       "history": []
@@ -1320,7 +1320,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "In that movie, he has a parrot on his shoulder wherever he goes.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "在那部电影里，无论他走到哪里，肩膀上都站着一只鹦鹉。",
       "accepted_answers": [],
       "history": []
@@ -1336,7 +1336,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "A cage is a place with bars where animals are kept.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "笼子是一个带有栏杆、用来关动物的地方。",
       "accepted_answers": [],
       "history": []
@@ -1352,7 +1352,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Do you think it's right for a zoo to keep all animals in cages?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你认为动物园把所有动物都关在笼子里是正确的吗？",
       "accepted_answers": [],
       "history": []
@@ -1368,7 +1368,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "supplies",
-      "note": "词汇卡：supplies。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "用品；物资",
       "accepted_answers": [],
       "history": []
@@ -1384,7 +1384,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "collar",
-      "note": "词汇卡：collar。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "项圈",
       "accepted_answers": [],
       "history": []
@@ -1400,7 +1400,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "litter",
-      "note": "词汇卡：litter。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "猫砂",
       "accepted_answers": [],
       "history": []
@@ -1416,7 +1416,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "litter box",
-      "note": "词汇卡：litter box。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "猫砂盆",
       "accepted_answers": [],
       "history": []
@@ -1432,7 +1432,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "a parrot",
-      "note": "词汇卡：parrot，结合课程语境保留冠词。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "一只鹦鹉",
       "accepted_answers": [],
       "history": []
@@ -1448,7 +1448,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "cage",
-      "note": "词汇卡：cage。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "笼子",
       "accepted_answers": [],
       "history": []
@@ -1464,7 +1464,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Make sure you groom your cats or dogs regularly and take them to the vet for health checks.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "一定要定期给猫或狗做清洁护理，并带它们去兽医那里做健康检查。",
       "accepted_answers": [],
       "history": []
@@ -1480,7 +1480,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Kittens and puppies can grow attached to you in two or three days.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "小猫和小狗可能在两三天内就开始依恋你。",
       "accepted_answers": [],
       "history": []
@@ -1496,7 +1496,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "The little girl grew attached to her babysitter after three months.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "三个月后，小女孩开始非常依恋她的保姆。",
       "accepted_answers": [],
       "history": []
@@ -1512,7 +1512,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "People or things that are reliable can be believed to work well.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "可靠的人或事物是可以相信其会好好运作的。",
       "accepted_answers": [],
       "history": []
@@ -1528,7 +1528,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "You're right.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你说得对。",
       "accepted_answers": [],
       "history": []
@@ -1544,7 +1544,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "That does sound like a lot of things to do.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "听起来确实有很多事情要做。",
       "accepted_answers": [],
       "history": []
@@ -1560,7 +1560,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Like what?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "比如什么？",
       "accepted_answers": [],
       "history": []
@@ -1576,7 +1576,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Like a parrot.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "比如鹦鹉。",
       "accepted_answers": [],
       "history": []
@@ -1592,7 +1592,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Parrots are much easier than dogs to take care of.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "鹦鹉比狗容易照顾得多。",
       "accepted_answers": [],
       "history": []
@@ -1608,7 +1608,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "That's a really good idea!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "这真是个好主意！",
       "accepted_answers": [],
       "history": []
@@ -1624,7 +1624,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "walk",
-      "note": "词汇卡：walk，课程中指遛狗。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "遛；步行",
       "accepted_answers": [],
       "history": []
@@ -1640,7 +1640,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "feed",
-      "note": "词汇卡：feed。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "喂养",
       "accepted_answers": [],
       "history": []
@@ -1656,7 +1656,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "parrot",
-      "note": "词汇卡：parrot。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "鹦鹉",
       "accepted_answers": [],
       "history": []
@@ -1672,7 +1672,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "decision",
-      "note": "词汇卡：decision。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "决定",
       "accepted_answers": [],
       "history": []
@@ -1688,7 +1688,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "train",
-      "note": "词汇卡：train。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "训练",
       "accepted_answers": [],
       "history": []
@@ -1704,7 +1704,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "take care of somebody or something",
-      "note": "词组卡：take care of somebody or something。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "照顾某人或某物",
       "accepted_answers": [],
       "history": []
@@ -1720,7 +1720,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "puppy",
-      "note": "词汇卡：puppy。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "小狗；幼犬",
       "accepted_answers": [],
       "history": []
@@ -1736,7 +1736,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I take them to my parents' house.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我会把它们送到我父母家。",
       "accepted_answers": [],
       "history": []
@@ -1752,7 +1752,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Okay, maybe my sister can help watch my pet.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "好吧，也许我姐姐可以帮我照看宠物。",
       "accepted_answers": [],
       "history": []
@@ -1768,7 +1768,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "What kind of pet are you going to get?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你准备养什么宠物？",
       "accepted_answers": [],
       "history": []
@@ -1784,7 +1784,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I really want a bulldog.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我真的很想养一只斗牛犬。",
       "accepted_answers": [],
       "history": []
@@ -1800,7 +1800,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I love the way bulldogs look and I can't wait to cuddle him.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我喜欢斗牛犬的样子，而且已经等不及要抱抱它了。",
       "accepted_answers": [],
       "history": []
@@ -1816,7 +1816,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Him?",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "它是公的吗？",
       "accepted_answers": [],
       "history": []
@@ -1832,7 +1832,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Yes! I'm going to get a male puppy and call him Buddy.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "是的！我要养一只公的小狗，并给它取名 Buddy。",
       "accepted_answers": [],
       "history": []
@@ -1848,7 +1848,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I'm happy for you, but remember that you also need to train Buddy.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我为你高兴，但要记得你还需要训练 Buddy。",
       "accepted_answers": [],
       "history": []
@@ -1864,7 +1864,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "I can help you with the training.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "我可以帮你训练它。",
       "accepted_answers": [],
       "history": []
@@ -1880,7 +1880,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Thanks, Steve.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "谢谢你，Steve。",
       "accepted_answers": [],
       "history": []
@@ -1896,7 +1896,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Oh, I'll also give you my vet's contact information.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "对了，我还会把我的兽医联系方式给你。",
       "accepted_answers": [],
       "history": []
@@ -1912,7 +1912,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "He is the best vet!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "他是最好的兽医！",
       "accepted_answers": [],
       "history": []
@@ -1928,7 +1928,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Awesome! I'll make a great pet parent one day.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "太棒了！总有一天我会成为一名很棒的宠物主人。",
       "accepted_answers": [],
       "history": []
@@ -1944,7 +1944,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Of course you will!",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "你当然会！",
       "accepted_answers": [],
       "history": []
@@ -1960,7 +1960,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "When you make a decision, you choose what should be done.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "当你作出决定时，你是在选择应该做什么。",
       "accepted_answers": [],
       "history": []
@@ -1976,7 +1976,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "Christina has decided to get a pet.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "Christina 已经决定养一只宠物。",
       "accepted_answers": [],
       "history": []
@@ -1992,7 +1992,7 @@
       "next_due": "2025-01-01",
       "interval_days": 1,
       "example": "It's a big decision.",
-      "note": "按中文意思完整复述英文，参考答案默认隐藏。",
+      "note": "Translate the Chinese prompt into English. The reference answer is hidden by default.",
       "prompt": "这是一个重大的决定。",
       "accepted_answers": [],
       "history": []

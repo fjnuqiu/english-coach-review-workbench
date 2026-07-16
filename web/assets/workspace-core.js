@@ -86,12 +86,12 @@
   }
 
   function masteryLabel(score, hasCards = true) {
-    if (!hasCards) return "未开始";
-    if (score < 20) return "很不熟悉";
-    if (score < 45) return "不熟悉";
-    if (score < 70) return "学习中";
-    if (score < 90) return "较熟悉";
-    return "已掌握";
+    if (!hasCards) return "Not started";
+    if (score < 20) return "Very unfamiliar";
+    if (score < 45) return "Unfamiliar";
+    if (score < 70) return "Learning";
+    if (score < 90) return "Familiar";
+    return "Mastered";
   }
 
   function reviewKeywords(item) {
@@ -360,7 +360,7 @@
   }
 
   function recordReviewResult(reviewItems, itemId, result, dateText, now = new Date().toISOString()) {
-    if (!["pass", "shaky", "fail"].includes(result)) throw new Error("无效的掌握结果");
+    if (!["pass", "shaky", "fail"].includes(result)) throw new Error("Invalid mastery result");
     let found = false;
     const updated = (reviewItems || []).map((source) => {
       if (source.id !== itemId) return clone(source);
@@ -384,7 +384,7 @@
       }];
       return item;
     });
-    if (!found) throw new Error("没有找到这条复习内容");
+    if (!found) throw new Error("Review item was not found");
     return updated;
   }
 

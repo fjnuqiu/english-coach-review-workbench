@@ -40,7 +40,7 @@
 
   async function signIn(email, password) {
     const activeClient = await initialize();
-    if (!activeClient) throw new Error("云同步尚未配置");
+    if (!activeClient) throw new Error("Cloud sync is not configured");
     const { data, error } = await activeClient.auth.signInWithPassword({
       email: String(email || "").trim().toLowerCase(),
       password: String(password || ""),
@@ -51,7 +51,7 @@
 
   async function signUp(email, password) {
     const activeClient = await initialize();
-    if (!activeClient) throw new Error("云同步尚未配置");
+    if (!activeClient) throw new Error("Cloud sync is not configured");
     const { data, error } = await activeClient.auth.signUp({
       email: String(email || "").trim().toLowerCase(),
       password: String(password || ""),
@@ -78,7 +78,7 @@
 
   async function readWorkspace(userId) {
     const activeClient = await initialize();
-    if (!activeClient) throw new Error("云同步尚未配置");
+    if (!activeClient) throw new Error("Cloud sync is not configured");
     const [coursesResult, cardsResult] = await Promise.all([
       activeClient.from(COURSES_TABLE).select("course_id,payload,updated_at").eq("user_id", userId),
       activeClient.from(CARDS_TABLE).select("course_id,card_id,payload,updated_at").eq("user_id", userId),
@@ -149,7 +149,7 @@
 
   async function saveWorkspace(userId, workspace) {
     const activeClient = await initialize();
-    if (!activeClient) throw new Error("云同步尚未配置");
+    if (!activeClient) throw new Error("Cloud sync is not configured");
     const courseRows = (workspace.courses || []).map((course) => courseRow(userId, course));
     if (courseRows.length) {
       const { error } = await activeClient.from(COURSES_TABLE).upsert(courseRows, {
@@ -168,7 +168,7 @@
 
   async function saveReviewItem(userId, item) {
     const activeClient = await initialize();
-    if (!activeClient) throw new Error("云同步尚未配置");
+    if (!activeClient) throw new Error("Cloud sync is not configured");
     const { error } = await activeClient.from(CARDS_TABLE).upsert(cardRow(userId, item), {
       onConflict: "user_id,course_id,card_id",
     });
