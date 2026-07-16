@@ -65,6 +65,7 @@ class CoachTests(unittest.TestCase):
                 "title": "卢浮宫",
                 "summary_zh": "参观卢浮宫的实用英语。",
                 "card_ids": ["a", "b"],
+                "selected_card_ids": ["a"],
                 "learned_on": "2026-07-05",
                 "source_files": ["IMG_1801.PNG"],
             }
@@ -99,6 +100,10 @@ class CoachTests(unittest.TestCase):
         self.assertIsInstance(result[0]["mastery_score"], float)
         self.assertIn(result[0]["mastery_label"], {"学习中", "较熟悉"})
         self.assertEqual([card["id"] for card in result[0]["cards"]], ["a", "b"])
+        self.assertEqual([card["id"] for card in result[0]["selected_cards"]], ["a"])
+        self.assertEqual(result[0]["selected_total_count"], 1)
+        self.assertEqual(result[0]["selected_due_count"], 1)
+        self.assertEqual(result[0]["priority_mastery_score"], result[0]["selected_mastery_score"])
 
     def test_course_mastery_score_uses_result_interval_and_history(self):
         course_store = load_course_store()
@@ -179,6 +184,24 @@ class CoachTests(unittest.TestCase):
 
         self.assertEqual(len(video_courses), 6)
         self.assertEqual(len(video_items), 111)
+        self.assertEqual(sum(len(course.get("selected_card_ids", [])) for course in video_courses), 24)
+        self.assertEqual(
+            {course["id"]: len(course.get("selected_card_ids", [])) for course in video_courses},
+            {
+                "pet-food-safety": 6,
+                "pet-supplies": 3,
+                "pet-grooming-and-attachment": 5,
+                "puppy-habits": 2,
+                "lets-get-a-puppy-speaking": 6,
+                "pet-decision-and-care": 2,
+            },
+        )
+        self.assertTrue(
+            all(
+                set(course.get("selected_card_ids", [])).issubset(course.get("card_ids", []))
+                for course in video_courses
+            )
+        )
         self.assertTrue(all(str(item.get("prompt") or "").strip() for item in video_items))
         self.assertIn("lets-get-a-puppy-speaking", video_course_ids)
         self.assertIn(
@@ -763,8 +786,12 @@ The room is also really crowded, so we need to wait to see it.
         self.assertTrue(payload["text"]["format"]["strict"])
         schema = payload["text"]["format"]["schema"]
         self.assertEqual(schema["required"], ["courses"])
-        self.assertIn("id_hint", schema["properties"]["courses"]["items"]["properties"])
+        course_schema = schema["properties"]["courses"]["items"]
+        self.assertIn("id_hint", course_schema["properties"])
+        self.assertIn("full_content", course_schema["required"])
+        self.assertIn("selected_content", course_schema["required"])
         self.assertIn("先按实际课程拆分", content[0]["text"])
+        self.assertIn("selected_content 的每个值必须", content[0]["text"])
 
     def test_record_media_learning_with_ai_analysis_uses_ai_cards(self):
         web_server = load_web_server()
@@ -815,7 +842,7 @@ The room is also really crowded, so we need to wait to see it.
     def test_ai_review_candidates_keeps_complete_course_without_ten_card_limit(self):
         web_server = load_web_server()
         analysis = {
-            "review_cards": [
+            "full_content": [
                 {
                     "item": f"Complete course sentence {index}.",
                     "prompt": f"完整课程句子 {index}。",
@@ -829,6 +856,64 @@ The room is also really crowded, so we need to wait to see it.
         candidates = web_server.ai_review_candidates(analysis)
 
         self.assertEqual(len(candidates), 15)
+
+    def test_record_media_learning_creates_full_and_selected_content_without_duplicates(self):
+        web_server = load_web_server()
+        full_content = [
+            {
+                "item": f"Complete sentence {index}.",
+                "prompt": f"完整句子 {index}。",
+                "example": f"Complete sentence {index}.",
+                "note": "完整采集",
+            }
+            for index in range(1, 13)
+        ]
+        analysis = {
+            "courses": [
+                {
+                    "id_hint": "complete-lesson",
+                    "title": "完整课程",
+                    "summary_zh": "完整与精选共用同一批卡。",
+                    "learned": [card["item"] for card in full_content],
+                    "full_content": full_content,
+                    "selected_content": [
+                        full_content[1]["item"],
+                        full_content[5]["item"],
+                        full_content[10]["item"],
+                    ],
+                }
+            ]
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            base = Path(tmpdir)
+            result = web_server.record_media_learning_from_ocr(
+                ["lesson.mp4"],
+                "",
+                "2026-07-16",
+                state_path=base / "review-items.json",
+                checkins_path=base / "checkins.jsonl",
+                notes_dir=base / "notes",
+                courses_path=base / "courses.json",
+                ai_analysis=analysis,
+            )
+            courses = json.loads((base / "courses.json").read_text(encoding="utf-8"))
+            items = json.loads((base / "review-items.json").read_text(encoding="utf-8"))
+
+        self.assertEqual(len(items), 12)
+        self.assertEqual(len(courses[0]["card_ids"]), 12)
+        self.assertEqual(len(courses[0]["selected_card_ids"]), 3)
+        self.assertTrue(set(courses[0]["selected_card_ids"]).issubset(courses[0]["card_ids"]))
+        course = result["dashboard"]["courses"][0]
+        self.assertEqual(len(course["full_content"]), 12)
+        self.assertEqual(len(course["selected_content"]), 3)
+
+    def test_selected_content_must_reference_full_content(self):
+        web_server = load_web_server()
+        with self.assertRaisesRegex(ValueError, "subset of full_content"):
+            web_server.analysis_selected_items(
+                {"selected_content": ["Invented sentence."]},
+                [{"item": "Real sentence."}],
+            )
 
     def test_record_codex_media_job_writes_pending_manifest_and_files(self):
         web_server = load_web_server()
@@ -1198,7 +1283,7 @@ The room is also really crowded, so we need to wait to see it.
                 },
             ]
             courses = [
-                {"id": "louvre", "title": "卢浮宫", "summary_zh": "参观场景", "card_ids": ["museum-open"], "learned_on": "2026-07-10", "order": 2},
+                {"id": "louvre", "title": "卢浮宫", "summary_zh": "参观场景", "card_ids": ["museum-open"], "selected_card_ids": ["museum-open"], "learned_on": "2026-07-10", "order": 2},
                 {"id": "client-basics", "title": "客户沟通", "summary_zh": "会议表达", "card_ids": ["hello-client"], "learned_on": "2026-07-01", "order": 1},
             ]
             state_path.write_text(json.dumps(cards, ensure_ascii=False), encoding="utf-8")
@@ -1218,6 +1303,9 @@ The room is also really crowded, so we need to wait to see it.
         self.assertEqual(payload["courses"][1]["due_count"], 1)
         self.assertEqual(payload["courses"][1]["today_cards"][0]["prompt_sentence"], "你好，感谢你参加会议。")
         self.assertEqual(payload["courses"][0]["all_cards"][0]["target_sentence"], "The museum opens at nine.")
+        self.assertEqual(payload["courses"][0]["full_content"], payload["courses"][0]["all_cards"])
+        self.assertEqual(len(payload["courses"][0]["selected_content"]), 1)
+        self.assertEqual(payload["courses"][0]["selected_total_count"], 1)
 
     def test_dashboard_sorts_least_familiar_then_due_count_and_manual_order(self):
         web_server = load_web_server()
@@ -1278,6 +1366,19 @@ The room is also really crowded, so we need to wait to see it.
                     "review_items": [{"id": "orphan", "course_id": "missing"}],
                 }
             )
+        with self.assertRaisesRegex(ValueError, "selected_card_ids must be a subset"):
+            web_server.validate_sync_state_payload(
+                {
+                    "courses": [
+                        {
+                            "id": "known",
+                            "card_ids": ["known-card"],
+                            "selected_card_ids": ["missing-card"],
+                        }
+                    ],
+                    "review_items": [{"id": "known-card", "course_id": "known"}],
+                }
+            )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)
@@ -1285,7 +1386,7 @@ The room is also really crowded, so we need to wait to see it.
             state_path = base / "review-items.json"
             old_courses = [{"id": "old", "card_ids": ["old-card"]}]
             old_items = [{"id": "old-card", "course_id": "old"}]
-            new_courses = [{"id": "new", "card_ids": ["new-card"]}]
+            new_courses = [{"id": "new", "card_ids": ["new-card"], "selected_card_ids": ["new-card"]}]
             new_items = [{"id": "new-card", "course_id": "new", "last_result": "pending"}]
             courses_path.write_text(json.dumps(old_courses), encoding="utf-8")
             state_path.write_text(json.dumps(old_items), encoding="utf-8")
