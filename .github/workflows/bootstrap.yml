@@ -19,7 +19,7 @@ jobs:
         run: |
           curl -fsSL https://edqiejhbdnjtknjmxjhj.supabase.co/storage/v1/object/public/english-coach-bootstrap/project.tar.gz -o /tmp/project.tar.gz
           tar -xzf /tmp/project.tar.gz
-          rm -f .github/workflows/bootstrap.yml
+          rm -f .github/workflows/pages.yml
 
       - name: Commit project files
         run: |
