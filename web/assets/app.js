@@ -88,22 +88,29 @@ function coursePriorityMastery(course) {
   return Number(course?.priority_mastery_score ?? course?.selected_mastery_score ?? course?.mastery_score ?? 0);
 }
 
+function recentReviewRank(course) {
+  return Number(Boolean(course?.reviewed_recently));
+}
+
 function sortCourses(courses) {
   const sorted = [...courses];
   if (state.sortMode === "due") {
     sorted.sort((left, right) =>
-      Number(right.due_count || 0) - Number(left.due_count || 0)
+      recentReviewRank(left) - recentReviewRank(right)
+      || Number(right.due_count || 0) - Number(left.due_count || 0)
       || coursePriorityMastery(left) - coursePriorityMastery(right)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999),
     );
   } else if (state.sortMode === "original") {
     sorted.sort((left, right) =>
-      Number(left.order ?? 9999) - Number(right.order ?? 9999)
+      recentReviewRank(left) - recentReviewRank(right)
+      || Number(left.order ?? 9999) - Number(right.order ?? 9999)
       || String(left.title || "").localeCompare(String(right.title || "")),
     );
   } else {
     sorted.sort((left, right) =>
-      coursePriorityMastery(left) - coursePriorityMastery(right)
+      recentReviewRank(left) - recentReviewRank(right)
+      || coursePriorityMastery(left) - coursePriorityMastery(right)
       || Number(right.due_count || 0) - Number(left.due_count || 0)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999)
       || String(left.title || "").localeCompare(String(right.title || "")),
@@ -247,6 +254,11 @@ function reviewModeMeta(mode) {
   };
 }
 
+function recentReviewLabel(course) {
+  if (!course?.reviewed_recently || !course?.recent_reviewed_until) return "";
+  return `Reviewed recently · lower priority until ${course.recent_reviewed_until}`;
+}
+
 function courseRow(course) {
   const presentation = bundledCoursePresentation(course);
   const expanded = course.id === state.expandedCourseId;
@@ -263,12 +275,14 @@ function courseRow(course) {
     ? workspace.masteryLabel(masteryScore, true)
     : workspace.masteryLabel(masteryScore, Number(course.total_count || 0) > 0);
   const masteryTitle = selectedCount > 0 ? "Core mastery" : "Mastery";
+  const recentReview = recentReviewLabel(course);
   return `
-    <article class="course-row${expanded ? " expanded" : ""}" data-mastery="${masteryScore >= 70 ? "high" : "low"}">
+    <article class="course-row${expanded ? " expanded" : ""}" data-mastery="${masteryScore >= 70 ? "high" : "low"}" data-recent-review="${Boolean(course.reviewed_recently)}">
       <button class="course-summary-button" type="button" aria-expanded="${expanded}" onclick="toggleCourse('${escapeHtml(course.id)}')">
         <span class="course-title-group">
           <strong>${escapeHtml(presentation.title)}</strong>
           <span>${escapeHtml(presentation.summary || "No course summary yet.")}</span>
+          ${recentReview ? `<span class="course-recent-review-flag">${escapeHtml(recentReview)}</span>` : ""}
         </span>
         <span class="course-metrics" aria-label="Course stats">
           <span class="course-metric mastery-metric"><strong>${masteryScore.toFixed(0)}%</strong><span>${selectedCount > 0 ? "Core · " : ""}${escapeHtml(masteryLabel)}</span></span>
@@ -284,6 +298,7 @@ function courseRow(course) {
             <p>${escapeHtml(presentation.summary || "This course does not have a summary yet.")}</p>
             <div class="course-badges">
               <span class="badge mastery-badge">${masteryTitle} ${masteryScore.toFixed(0)}% · ${escapeHtml(masteryLabel)}</span>
+              ${recentReview ? `<span class="badge recent-review-badge">${escapeHtml(recentReview)}</span>` : ""}
               ${selectedCount > 0 ? `<span class="badge">Full-content mastery ${overallMasteryScore.toFixed(0)}%</span>` : ""}
               <span class="badge${course.due_count > 0 ? " due" : ""}">${escapeHtml(dueLabel)}</span>
               <span class="badge">Mastered ${Number(course.mastered_count || 0)} / ${Number(course.total_count || 0)}</span>

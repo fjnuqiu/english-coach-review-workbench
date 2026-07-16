@@ -12,6 +12,7 @@
     pass: [55, 25, 20],
   };
   const INTERVAL_STEPS = [1, 2, 4, 7, 14, 30];
+  const RECENT_REVIEW_WINDOW_DAYS = 3;
   const DEFAULT_SELECTED_CARD_IDS = Object.freeze({
     "pet-food-safety": [
       "the-food-that-you-like-is-not-always-the-best-food-for-your-pet",
@@ -281,6 +282,31 @@
     return leftOrder - rightOrder || String(left.id || "").localeCompare(String(right.id || ""));
   }
 
+  function recentReviewStatus(cards, dateText) {
+    const earliestDate = addDays(dateText, -(RECENT_REVIEW_WINDOW_DAYS - 1));
+    let latestReviewDate = "";
+    for (const card of cards || []) {
+      for (const entry of card?.history || []) {
+        const reviewedOn = String(entry?.date || "").trim();
+        if (
+          /^\d{4}-\d{2}-\d{2}$/.test(reviewedOn)
+          && reviewedOn >= earliestDate
+          && reviewedOn <= dateText
+          && reviewedOn > latestReviewDate
+        ) {
+          latestReviewDate = reviewedOn;
+        }
+      }
+    }
+    return {
+      reviewed_recently: Boolean(latestReviewDate),
+      recent_reviewed_on: latestReviewDate || null,
+      recent_reviewed_until: latestReviewDate
+        ? addDays(latestReviewDate, RECENT_REVIEW_WINDOW_DAYS - 1)
+        : null,
+    };
+  }
+
   function dashboardFromWorkspace(courses, reviewItems, dateText) {
     const grouped = new Map((courses || []).map((course) => [course.id, []]));
     for (const item of reviewItems || []) {
@@ -294,6 +320,7 @@
       const completedToday = cards.filter((item) =>
         (item.history || []).some((entry) => entry?.date === dateText),
       ).length;
+      const recentReview = recentReviewStatus(cards, dateText);
       const masteredCount = activeCards.filter((item) => item.last_result === "pass").length;
       const masteryScore = activeCards.length
         ? Math.round((activeCards.reduce((sum, item) => sum + cardMasteryScore(item), 0) / activeCards.length) * 10) / 10
@@ -319,6 +346,7 @@
         ...clone(course),
         due_count: dueCards.length,
         completed_today: completedToday,
+        ...recentReview,
         total_count: cards.length,
         mastered_count: masteredCount,
         mastery_score: masteryScore,
@@ -340,7 +368,8 @@
     });
 
     coursePayloads.sort((left, right) =>
-      Number(left.priority_mastery_score ?? left.mastery_score ?? 0) - Number(right.priority_mastery_score ?? right.mastery_score ?? 0)
+      Number(Boolean(left.reviewed_recently)) - Number(Boolean(right.reviewed_recently))
+      || Number(left.priority_mastery_score ?? left.mastery_score ?? 0) - Number(right.priority_mastery_score ?? right.mastery_score ?? 0)
       || Number(right.due_count || 0) - Number(left.due_count || 0)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999)
       || String(left.title || "").localeCompare(String(right.title || "")),
