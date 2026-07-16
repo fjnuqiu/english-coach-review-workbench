@@ -20,6 +20,7 @@ RESULT_MASTERY_WEIGHTS = {
     "pass": (55.0, 25.0, 20.0),
 }
 MAX_REVIEW_INTERVAL_DAYS = 30.0
+RECENT_REVIEW_WINDOW_DAYS = 3
 
 
 def load_courses(path: Path = DEFAULT_COURSES) -> list[dict[str, Any]]:
@@ -121,6 +122,38 @@ def mastery_label(score: float, has_cards: bool = True) -> str:
     return "已掌握"
 
 
+def _recent_review_status(
+    cards: list[dict[str, Any]],
+    on_date: dt.date,
+) -> dict[str, Any]:
+    """Return the three-calendar-day course marker derived from card history."""
+
+    earliest_date = on_date - dt.timedelta(days=RECENT_REVIEW_WINDOW_DAYS - 1)
+    latest_review_date: dt.date | None = None
+    for card in cards:
+        for entry in card.get("history", []):
+            if not isinstance(entry, dict):
+                continue
+            try:
+                reviewed_on = dt.date.fromisoformat(str(entry.get("date") or ""))
+            except ValueError:
+                continue
+            if earliest_date <= reviewed_on <= on_date and (
+                latest_review_date is None or reviewed_on > latest_review_date
+            ):
+                latest_review_date = reviewed_on
+
+    return {
+        "reviewed_recently": latest_review_date is not None,
+        "recent_reviewed_on": latest_review_date.isoformat() if latest_review_date else None,
+        "recent_reviewed_until": (
+            (latest_review_date + dt.timedelta(days=RECENT_REVIEW_WINDOW_DAYS - 1)).isoformat()
+            if latest_review_date
+            else None
+        ),
+    }
+
+
 def group_cards_by_course(
     items: list[dict[str, Any]],
     courses: list[dict[str, Any]],
@@ -147,6 +180,7 @@ def group_cards_by_course(
             for item in cards
             if any(entry.get("date") == date_text for entry in item.get("history", []))
         )
+        recent_review = _recent_review_status(cards, on_date)
         mastered_count = sum(
             1
             for item in active_cards
@@ -199,6 +233,7 @@ def group_cards_by_course(
                 "due_cards": due_cards,
                 "due_count": len(due_cards),
                 "completed_today": completed_today,
+                **recent_review,
                 "total_count": len(cards),
                 "mastered_count": mastered_count,
                 "mastery_score": mastery_score,
