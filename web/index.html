@@ -39,7 +39,7 @@
       <div>
         <p class="eyebrow">MY COURSES</p>
         <h1 id="pageTitle">课程复习</h1>
-        <p>选择一门课程，完成今天到期的句子。</p>
+        <p>每门课都可练习完整内容，也可优先掌握精选核心内容。</p>
       </div>
       <label class="date-field">
         <span>复习日期</span>
@@ -70,7 +70,7 @@
       <div class="section-heading">
         <div>
           <h2 id="courseSectionTitle">我的课程</h2>
-          <p>优先显示有到期任务的课程，点击课程可查看概要并开始复习。</p>
+          <p>默认按核心熟练度从低到高排序，展开课程后选择精选、完整或今日到期内容。</p>
         </div>
         <div class="section-actions">
           <label class="sort-field">
@@ -95,6 +95,10 @@
           <p class="eyebrow" id="sessionLabel">TODAY'S REVIEW</p>
           <h2 id="activeCourseTitle">课程复习</h2>
           <p id="activeCourseSummary"></p>
+          <div class="review-mode-context" id="reviewModeContext" aria-live="polite">
+            <span class="review-core-badge" id="reviewCoreBadge" hidden>核心必会</span>
+            <span id="reviewModeDescription">按今日到期计划复习。</span>
+          </div>
         </div>
         <button class="icon-button" type="button" title="关闭复习" aria-label="关闭复习" onclick="closeCourseReview()">×</button>
       </div>
@@ -105,8 +109,8 @@
       </div>
 
       <div class="review-empty" id="reviewEmptyState" hidden>
-        <strong>这门课程今天的复习已完成</strong>
-        <p>系统会根据本次结果安排下一次复习。</p>
+        <strong id="reviewEmptyTitle">这门课程今天的复习已完成</strong>
+        <p id="reviewEmptyDescription">系统会根据本次结果安排下一次复习。</p>
       </div>
 
       <div class="review-card" id="reviewCard">
@@ -143,7 +147,7 @@
             <span>你的表达</span>
             <p id="answerDiffText"></p>
           </div>
-          <strong id="coreCoverage">核心 0%</strong>
+          <strong id="coreCoverage">匹配度 0%</strong>
         </div>
 
         <div class="session-navigation">
