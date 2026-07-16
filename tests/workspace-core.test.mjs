@@ -43,6 +43,47 @@ test("course dashboard orders the least familiar course first", () => {
   assert.deepEqual(dashboard.courses[0].full_content, dashboard.courses[0].all_cards);
 });
 
+test("recently reviewed courses remain marked for three days and move below new work", () => {
+  const courses = [
+    { id: "recent", title: "Recent course", order: 1, card_ids: ["recent-card"], selected_card_ids: ["recent-card"] },
+    { id: "unreviewed", title: "Unreviewed course", order: 2, card_ids: ["unreviewed-card"], selected_card_ids: ["unreviewed-card"] },
+  ];
+  const reviewItems = [
+    {
+      id: "recent-card",
+      course_id: "recent",
+      item: "Recent sentence",
+      last_result: "pending",
+      interval_days: 1,
+      next_due: "2026-07-16",
+      history: [{ date: "2026-07-16", result: "fail" }],
+    },
+    {
+      id: "unreviewed-card",
+      course_id: "unreviewed",
+      item: "Unreviewed sentence",
+      last_result: "pass",
+      interval_days: 30,
+      next_due: "2026-08-01",
+      history: [],
+    },
+  ];
+
+  const today = workspace.dashboardFromWorkspace(courses, reviewItems, "2026-07-16");
+  const recent = today.courses.find((course) => course.id === "recent");
+  assert.deepEqual(today.courses.map((course) => course.id), ["unreviewed", "recent"]);
+  assert.equal(recent.reviewed_recently, true);
+  assert.equal(recent.recent_reviewed_on, "2026-07-16");
+  assert.equal(recent.recent_reviewed_until, "2026-07-18");
+
+  const finalMarkedDay = workspace.dashboardFromWorkspace(courses, reviewItems, "2026-07-18");
+  assert.equal(finalMarkedDay.courses.find((course) => course.id === "recent").reviewed_recently, true);
+
+  const afterExpiry = workspace.dashboardFromWorkspace(courses, reviewItems, "2026-07-19");
+  assert.equal(afterExpiry.courses.find((course) => course.id === "recent").reviewed_recently, false);
+  assert.deepEqual(afterExpiry.courses.map((course) => course.id), ["recent", "unreviewed"]);
+});
+
 test("selected content is an ordered subset with its own mastery", () => {
   const courses = [{
     id: "lesson",
@@ -310,4 +351,6 @@ test("page exposes account sync and mastery sorting controls", async () => {
   assert.match(script, /mergeSeedWorkspace/);
   assert.match(script, /selected_content/);
   assert.match(script, /full_content/);
+  assert.match(script, /Reviewed recently/);
+  assert.match(script, /reviewed_recently/);
 });

@@ -104,6 +104,30 @@ class CoachTests(unittest.TestCase):
         self.assertEqual(result[0]["selected_total_count"], 1)
         self.assertEqual(result[0]["selected_due_count"], 1)
         self.assertEqual(result[0]["priority_mastery_score"], result[0]["selected_mastery_score"])
+        self.assertTrue(result[0]["reviewed_recently"])
+        self.assertEqual(result[0]["recent_reviewed_on"], "2026-07-11")
+        self.assertEqual(result[0]["recent_reviewed_until"], "2026-07-13")
+
+    def test_group_cards_by_course_keeps_recent_review_marker_for_three_days(self):
+        course_store = load_course_store()
+        courses = [{"id": "recent", "title": "最近复习", "card_ids": ["card"]}]
+        items = [{
+            "id": "card",
+            "course_id": "recent",
+            "item": "A sentence",
+            "history": [{"date": "2026-07-11", "result": "pass"}],
+        }]
+
+        final_marked_day = course_store.group_cards_by_course(
+            items, courses, dt.date(2026, 7, 13)
+        )[0]
+        expired_day = course_store.group_cards_by_course(
+            items, courses, dt.date(2026, 7, 14)
+        )[0]
+
+        self.assertTrue(final_marked_day["reviewed_recently"])
+        self.assertFalse(expired_day["reviewed_recently"])
+        self.assertIsNone(expired_day["recent_reviewed_on"])
 
     def test_course_mastery_score_uses_result_interval_and_history(self):
         course_store = load_course_store()
