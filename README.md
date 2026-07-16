@@ -6,10 +6,11 @@
 
 - 本地工作台运行在 `python3 tools/web_server.py --port 8765`，保留截图/录屏导入、Codex 整理和中译英。
 - 公网版本通过 GitHub Pages 发布，使用 Supabase 邮箱/密码账号同步课程、复习内容和熟练度。
-- 课程默认按熟练度从低到高排列；同分时，待复习更多的课程排在前面。
+- 每门视频课分为“完整内容”和“精选内容（核心必会）”；两种入口共用同一份复习记录。
+- 课程默认按核心熟练度从低到高排列；同分时，待复习更多的课程排在前面。
 - 个人学习数据、上传文件、笔记和环境变量都由 `.gitignore` 排除，不进入公开 GitHub 仓库。
 
-首次上线时，在 Supabase SQL Editor 执行 `supabase/english_coach.sql`，并为 GitHub Actions 配置 `VITE_SUPABASE_URL` 和 `VITE_SUPABASE_PUBLISHABLE_KEY`。本机也可把同名变量放进 `.env.local`，登录后会把现有课程迁移到账号。
+首次上线时，在 Supabase SQL Editor 执行 `supabase/english_coach.sql`。GitHub Pages 工作流已带浏览器可公开的 Supabase 配置；如需更换项目，可在 GitHub Actions 中用 `VITE_SUPABASE_URL` 和 `VITE_SUPABASE_PUBLISHABLE_KEY` 覆盖。本机也可把同名变量放进 `.env.local`，登录后会把现有课程迁移到账号。
 
 验证命令：
 
@@ -189,7 +190,6 @@ A+课程：
 ```
 
 这两个新表达会自动加入复习队列，并从明天开始复习。
-
 
 ## 在线访问
 
