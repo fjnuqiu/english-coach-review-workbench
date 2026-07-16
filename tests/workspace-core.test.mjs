@@ -3,7 +3,9 @@ import { readFile } from "node:fs/promises";
 import test from "node:test";
 
 await import("../web/assets/workspace-core.js");
+await import("../web/assets/video-course-seed.js");
 const workspace = globalThis.EnglishCoachWorkspace;
+const videoCourseSeed = globalThis.EnglishCoachVideoCourseSeed;
 
 test("course dashboard orders the least familiar course first", () => {
   const courses = [
@@ -99,6 +101,64 @@ test("known video courses migrate their curated selection during account sync", 
     merged.courses[0].selected_card_ids,
     dashboard.courses[0].selected_cards.map((card) => card.id),
   );
+});
+
+test("bundled video courses initialize an empty cloud account without learner progress", () => {
+  const seeded = workspace.mergeSeedWorkspace(
+    { courses: [], review_items: [] },
+    videoCourseSeed.workspace(),
+  );
+  const dashboard = workspace.dashboardFromWorkspace(
+    seeded.courses,
+    seeded.review_items,
+    "2026-07-16",
+  );
+
+  assert.equal(seeded.courses.length, 6);
+  assert.equal(seeded.review_items.length, 111);
+  assert.equal(dashboard.courses.reduce((sum, course) => sum + course.total_count, 0), 111);
+  assert.equal(dashboard.courses.reduce((sum, course) => sum + course.selected_total_count, 0), 24);
+  assert.ok(seeded.review_items.every((item) => item.status === "new"));
+  assert.ok(seeded.review_items.every((item) => item.last_result === "pending"));
+  assert.ok(seeded.review_items.every((item) => item.history.length === 0));
+  assert.ok(seeded.courses.every((course) => !Object.hasOwn(course, "learned_on")));
+  assert.ok(seeded.review_items.every((item) => !Object.hasOwn(item, "sync_updated_at")));
+  assert.ok(dashboard.courses.every((course) =>
+    course.selected_cards.every((card) => course.all_cards.some((full) => full.id === card.id)),
+  ));
+});
+
+test("bundled video courses keep existing account progress and add only missing content", () => {
+  const existingCourse = {
+    id: "pet-food-safety",
+    title: "我的宠物饮食课",
+    card_ids: ["are-you-a-pet-owner"],
+    selected_card_ids: [],
+  };
+  const existingItem = {
+    id: "are-you-a-pet-owner",
+    course_id: "pet-food-safety",
+    item: "Are you a pet owner?",
+    status: "reviewing",
+    last_result: "pass",
+    interval_days: 30,
+    next_due: "2026-08-15",
+    history: [{ date: "2026-07-16", result: "pass", synced_at: "2026-07-16T08:00:00Z" }],
+  };
+  const seeded = workspace.mergeSeedWorkspace(
+    { courses: [existingCourse], review_items: [existingItem] },
+    videoCourseSeed.workspace(),
+  );
+  const course = seeded.courses.find((item) => item.id === "pet-food-safety");
+  const item = seeded.review_items.find((entry) => entry.id === "are-you-a-pet-owner");
+
+  assert.equal(seeded.courses.length, 6);
+  assert.equal(course.title, "我的宠物饮食课");
+  assert.equal(course.card_ids.length, 10);
+  assert.equal(course.selected_card_ids.length, 6);
+  assert.equal(item.last_result, "pass");
+  assert.equal(item.history.length, 1);
+  assert.equal(seeded.review_items.length, 111);
 });
 
 test("cloud review result follows the same interval ladder as the local coach", () => {
@@ -238,9 +298,11 @@ test("page exposes account sync and mastery sorting controls", async () => {
 
   assert.match(html, /id="accountToolButton"/);
   assert.match(html, /id="courseSortSelect"/);
+  assert.match(html, /video-course-seed\.js/);
   assert.match(html, /最不熟优先/);
   assert.match(script, /mastery_score/);
   assert.match(script, /synchronizeWorkspace/);
+  assert.match(script, /mergeSeedWorkspace/);
   assert.match(script, /selected_content/);
   assert.match(script, /full_content/);
 });
