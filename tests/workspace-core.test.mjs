@@ -36,7 +36,7 @@ test("course dashboard orders the least familiar course first", () => {
   const dashboard = workspace.dashboardFromWorkspace(courses, reviewItems, "2026-07-16");
 
   assert.deepEqual(dashboard.courses.map((course) => course.id), ["new", "known"]);
-  assert.equal(dashboard.courses[0].mastery_label, "很不熟悉");
+  assert.equal(dashboard.courses[0].mastery_label, "Very unfamiliar");
   assert.equal(dashboard.courses[1].mastery_score, 100);
   assert.equal(dashboard.courses[0].selected_total_count, 1);
   assert.deepEqual(dashboard.courses[0].selected_content, dashboard.courses[0].selected_cards);
@@ -123,6 +123,9 @@ test("bundled video courses initialize an empty cloud account without learner pr
   assert.ok(seeded.review_items.every((item) => item.history.length === 0));
   assert.ok(seeded.courses.every((course) => !Object.hasOwn(course, "learned_on")));
   assert.ok(seeded.review_items.every((item) => !Object.hasOwn(item, "sync_updated_at")));
+  assert.ok(seeded.courses.every((course) => !/[\u4E00-\u9FFF]/.test(course.title)));
+  assert.ok(seeded.courses.every((course) => !/[\u4E00-\u9FFF]/.test(course.summary_zh)));
+  assert.ok(seeded.review_items.every((item) => item.note.startsWith("Translate the Chinese prompt")));
   assert.ok(dashboard.courses.every((course) =>
     course.selected_cards.every((card) => course.all_cards.some((full) => full.id === card.id)),
   ));
@@ -299,7 +302,9 @@ test("page exposes account sync and mastery sorting controls", async () => {
   assert.match(html, /id="accountToolButton"/);
   assert.match(html, /id="courseSortSelect"/);
   assert.match(html, /video-course-seed\.js/);
-  assert.match(html, /最不熟优先/);
+  assert.match(html, /Least familiar first/);
+  assert.match(html, /Chinese prompt/);
+  assert.match(html, /Your English/);
   assert.match(script, /mastery_score/);
   assert.match(script, /synchronizeWorkspace/);
   assert.match(script, /mergeSeedWorkspace/);
