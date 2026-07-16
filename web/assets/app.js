@@ -14,6 +14,7 @@ const state = {
   expandedCourseId: "",
   selectedCourseId: "",
   sessionCards: [],
+  sessionMode: "due",
   currentReviewIndex: 0,
   sessionInitialCount: 0,
   translatedEnglish: "",
@@ -71,12 +72,16 @@ function hasCloudWorkspace() {
   return Boolean(state.user && state.cloudReady);
 }
 
+function coursePriorityMastery(course) {
+  return Number(course?.priority_mastery_score ?? course?.selected_mastery_score ?? course?.mastery_score ?? 0);
+}
+
 function sortCourses(courses) {
   const sorted = [...courses];
   if (state.sortMode === "due") {
     sorted.sort((left, right) =>
       Number(right.due_count || 0) - Number(left.due_count || 0)
-      || Number(left.mastery_score || 0) - Number(right.mastery_score || 0)
+      || coursePriorityMastery(left) - coursePriorityMastery(right)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999),
     );
   } else if (state.sortMode === "original") {
@@ -86,7 +91,7 @@ function sortCourses(courses) {
     );
   } else {
     sorted.sort((left, right) =>
-      Number(left.mastery_score || 0) - Number(right.mastery_score || 0)
+      coursePriorityMastery(left) - coursePriorityMastery(right)
       || Number(right.due_count || 0) - Number(left.due_count || 0)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999)
       || String(left.title || "").localeCompare(String(right.title || "")),
@@ -163,13 +168,73 @@ function renderDashboard() {
   }
 }
 
+function normalizeReviewMode(mode) {
+  if (mode === "all") return "full";
+  return ["due", "selected", "full"].includes(mode) ? mode : "due";
+}
+
+function firstCourseCardList(course, keys) {
+  for (const key of keys) {
+    if (Array.isArray(course?.[key])) return course[key];
+  }
+  return [];
+}
+
+function courseCardsForMode(course, mode) {
+  const normalizedMode = normalizeReviewMode(mode);
+  if (normalizedMode === "selected") {
+    return firstCourseCardList(course, ["selected_content", "selected_cards"]);
+  }
+  if (normalizedMode === "full") {
+    return firstCourseCardList(course, ["full_content", "all_cards"]);
+  }
+  return firstCourseCardList(course, ["today_cards"]);
+}
+
+function reviewModeMeta(mode) {
+  const normalizedMode = normalizeReviewMode(mode);
+  if (normalizedMode === "selected") {
+    return {
+      label: "SELECTED CONTENT",
+      description: "精选内容：课程中必须掌握、需要反复练习的核心表达。",
+      completeLabel: "精选内容练习完成",
+      emptyTitle: "这门课程的精选内容已完成",
+      emptyDescription: "核心内容会根据掌握情况继续安排复习。",
+    };
+  }
+  if (normalizedMode === "full") {
+    return {
+      label: "FULL CONTENT",
+      description: "完整内容：按视频课程顺序练习全部可确认内容。",
+      completeLabel: "完整内容练习完成",
+      emptyTitle: "这门课程的完整内容已完成",
+      emptyDescription: "你可以返回课程，继续练习精选内容或今日到期内容。",
+    };
+  }
+  return {
+    label: "TODAY'S REVIEW",
+    description: "今日到期：按复习计划练习现在最需要巩固的内容。",
+    completeLabel: "今日任务完成",
+    emptyTitle: "这门课程今天的复习已完成",
+    emptyDescription: "系统会根据本次结果安排下一次复习。",
+  };
+}
+
 function courseRow(course) {
   const expanded = course.id === state.expandedCourseId;
-  const dueLabel = course.due_count > 0 ? `${course.due_count} 条今日到期` : "今日已清空";
-  const actionLabel = course.due_count > 0 ? "开始今日复习" : "练习全部句子";
-  const actionMode = course.due_count > 0 ? "due" : "all";
-  const masteryScore = Math.max(0, Math.min(100, Number(course.mastery_score || 0)));
-  const masteryLabel = course.mastery_label || workspace.masteryLabel(masteryScore, Number(course.total_count || 0) > 0);
+  const dueCards = courseCardsForMode(course, "due");
+  const selectedCards = courseCardsForMode(course, "selected");
+  const fullCards = courseCardsForMode(course, "full");
+  const dueCount = Number(course.due_count ?? dueCards.length);
+  const selectedCount = Number(course.selected_total_count ?? course.selected_count ?? selectedCards.length);
+  const fullCount = Number(course.full_total_count ?? course.full_count ?? course.total_count ?? fullCards.length);
+  const dueLabel = dueCount > 0 ? `${dueCount} 条今日到期` : "今日已清空";
+  const masteryScore = Math.max(0, Math.min(100, coursePriorityMastery(course)));
+  const overallMasteryScore = Math.max(0, Math.min(100, Number(course.mastery_score || 0)));
+  const masteryLabel = selectedCount > 0
+    ? (course.selected_mastery_label || workspace.masteryLabel(masteryScore, true))
+    : (course.mastery_label || workspace.masteryLabel(masteryScore, Number(course.total_count || 0) > 0));
+  const masteryTitle = selectedCount > 0 ? "核心熟练度" : "熟练度";
   return `
     <article class="course-row${expanded ? " expanded" : ""}" data-mastery="${masteryScore >= 70 ? "high" : "low"}">
       <button class="course-summary-button" type="button" aria-expanded="${expanded}" onclick="toggleCourse('${escapeHtml(course.id)}')">
@@ -178,7 +243,7 @@ function courseRow(course) {
           <span>${escapeHtml(course.summary_zh || "尚无课程概要")}</span>
         </span>
         <span class="course-metrics" aria-label="课程数据">
-          <span class="course-metric mastery-metric"><strong>${masteryScore.toFixed(0)}%</strong><span>${escapeHtml(masteryLabel)}</span></span>
+          <span class="course-metric mastery-metric"><strong>${masteryScore.toFixed(0)}%</strong><span>${selectedCount > 0 ? "核心 · " : ""}${escapeHtml(masteryLabel)}</span></span>
           <span class="course-metric"><strong>${Number(course.due_count || 0)}</strong><span>待复习</span></span>
           <span class="course-metric completed-metric"><strong>${Number(course.completed_today || 0)}</strong><span>今日完成</span></span>
           <span class="course-metric"><strong>${Number(course.total_count || 0)}</strong><span>全部句子</span></span>
@@ -190,14 +255,28 @@ function courseRow(course) {
           <div>
             <p>${escapeHtml(course.summary_zh || "这门课程还没有概要。")}</p>
             <div class="course-badges">
-              <span class="badge mastery-badge">熟练度 ${masteryScore.toFixed(0)}% · ${escapeHtml(masteryLabel)}</span>
+              <span class="badge mastery-badge">${masteryTitle} ${masteryScore.toFixed(0)}% · ${escapeHtml(masteryLabel)}</span>
+              ${selectedCount > 0 ? `<span class="badge">完整内容熟练度 ${overallMasteryScore.toFixed(0)}%</span>` : ""}
               <span class="badge${course.due_count > 0 ? " due" : ""}">${escapeHtml(dueLabel)}</span>
               <span class="badge">已掌握 ${Number(course.mastered_count || 0)} / ${Number(course.total_count || 0)}</span>
               ${course.learned_on ? `<span class="badge">学习于 ${escapeHtml(course.learned_on)}</span>` : ""}
             </div>
-            <div class="mastery-track" aria-label="熟练度 ${masteryScore.toFixed(0)}%"><span style="width:${masteryScore}%"></span></div>
+            <div class="mastery-track" aria-label="${masteryTitle} ${masteryScore.toFixed(0)}%"><span style="width:${masteryScore}%"></span></div>
           </div>
-          <button class="button primary" type="button" onclick="startCourseReview('${escapeHtml(course.id)}', '${actionMode}')">${actionLabel}</button>
+          <div class="course-mode-actions" aria-label="选择练习内容">
+            <button class="course-mode-button due" type="button" onclick="startCourseReview('${escapeHtml(course.id)}', 'due')"${dueCards.length ? "" : " disabled"}>
+              <strong>今日到期</strong>
+              <small>${dueCount > 0 ? `${dueCount} 条按计划复习` : "今天没有到期内容"}</small>
+            </button>
+            <button class="course-mode-button selected" type="button" onclick="startCourseReview('${escapeHtml(course.id)}', 'selected')"${selectedCards.length ? "" : " disabled"}>
+              <strong>精选内容（核心必会）</strong>
+              <small>${selectedCount} 条核心表达</small>
+            </button>
+            <button class="course-mode-button full" type="button" onclick="startCourseReview('${escapeHtml(course.id)}', 'full')"${fullCards.length ? "" : " disabled"}>
+              <strong>完整内容（视频全部内容）</strong>
+              <small>${fullCount} 条完整课程内容</small>
+            </button>
+          </div>
         </div>
       </div>
     </article>`;
@@ -420,15 +499,20 @@ function toggleCourse(courseId) {
 function startCourseReview(courseId, mode = "due") {
   const course = (state.dashboard?.courses || []).find((entry) => entry.id === courseId);
   if (!course) return;
+  const normalizedMode = normalizeReviewMode(mode);
   state.selectedCourseId = courseId;
   state.expandedCourseId = courseId;
-  const preferredCards = mode === "all" ? course.all_cards : course.today_cards;
+  state.sessionMode = normalizedMode;
+  const preferredCards = courseCardsForMode(course, normalizedMode);
   state.sessionCards = [...(preferredCards || [])];
   state.currentReviewIndex = 0;
   state.sessionInitialCount = state.sessionCards.length;
   $("activeCourseTitle").textContent = course.title;
   $("activeCourseSummary").textContent = course.summary_zh || "";
-  $("sessionLabel").textContent = mode === "all" ? "COURSE PRACTICE" : "TODAY'S REVIEW";
+  const modeMeta = reviewModeMeta(normalizedMode);
+  $("sessionLabel").textContent = modeMeta.label;
+  $("reviewModeDescription").textContent = modeMeta.description;
+  $("reviewCoreBadge").hidden = normalizedMode !== "selected";
   $("courseReviewWorkspace").hidden = false;
   renderCourses();
   renderActiveCard();
@@ -439,6 +523,7 @@ function closeCourseReview() {
   stopReviewSpeech();
   state.selectedCourseId = "";
   state.sessionCards = [];
+  state.sessionMode = "due";
   state.currentReviewIndex = 0;
   $("courseReviewWorkspace").hidden = true;
 }
@@ -456,7 +541,7 @@ function resetCardFeedback() {
   $("diffPanel").hidden = true;
   $("targetDiffText").textContent = "";
   $("answerDiffText").textContent = "";
-  $("coreCoverage").textContent = "核心 0%";
+  $("coreCoverage").textContent = "匹配度 0%";
 }
 
 function renderActiveCard() {
@@ -468,64 +553,17 @@ function renderActiveCard() {
   const completedInSession = Math.max(0, state.sessionInitialCount - state.sessionCards.length);
   const denominator = Math.max(1, state.sessionInitialCount);
   const progress = Math.round((completedInSession / denominator) * 100);
+  const modeMeta = reviewModeMeta(state.sessionMode);
   $("sessionProgressBar").style.width = `${empty ? 100 : progress}%`;
-  $("sessionProgressText").textContent = empty ? "今日任务完成" : `已完成 ${completedInSession} 条`;
+  $("sessionProgressText").textContent = empty ? modeMeta.completeLabel : `已完成 ${completedInSession} 条`;
   $("reviewPositionText").textContent = empty ? `${state.sessionInitialCount} / ${state.sessionInitialCount}` : `${state.currentReviewIndex + 1} / ${state.sessionCards.length}`;
+  $("reviewEmptyTitle").textContent = modeMeta.emptyTitle;
+  $("reviewEmptyDescription").textContent = modeMeta.emptyDescription;
   if (!card) return;
   resetCardFeedback();
   $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "请回忆这句话的英文表达。";
   $("previousReviewButton").disabled = state.currentReviewIndex <= 0;
   $("nextReviewButton").disabled = state.currentReviewIndex >= state.sessionCards.length - 1;
-}
-
-function answerTokens(value) {
-  return String(value || "")
-    .toLowerCase()
-    .replace(/[’‘]/g, "'")
-    .replace(/\bit's\b/g, "it is")
-    .replace(/\bwe're\b/g, "we are")
-    .replace(/\byou're\b/g, "you are")
-    .replace(/\bthey're\b/g, "they are")
-    .replace(/\bi'm\b/g, "i am")
-    .replace(/\bcan't\b/g, "cannot")
-    .replace(/\bisn't\b/g, "is not")
-    .replace(/\baren't\b/g, "are not")
-    .replace(/\bdon't\b/g, "do not")
-    .replace(/\bdoesn't\b/g, "does not")
-    .replace(/\bdidn't\b/g, "did not")
-    .match(/[a-z0-9]+(?:'[a-z]+)?/g) || [];
-}
-
-function normalizeAnswer(value) {
-  return answerTokens(value).join(" ");
-}
-
-function compareReviewAnswer(answer, target, keywords = []) {
-  const answerList = answerTokens(answer);
-  const targetList = answerTokens(target);
-  const answerSet = new Set(answerList);
-  const targetSet = new Set(targetList);
-  const important = (keywords.length ? keywords : targetList.filter((token) => token.length > 2))
-    .map((token) => normalizeAnswer(token))
-    .filter(Boolean);
-  const importantUnique = [...new Set(important)];
-  const matchedKeywords = importantUnique.filter((token) => answerSet.has(token));
-  const keywordCoverage = importantUnique.length ? matchedKeywords.length / importantUnique.length : 0;
-  const matchedTarget = targetList.filter((token) => answerSet.has(token)).length;
-  const tokenCoverage = targetList.length ? matchedTarget / targetList.length : 0;
-  const exact = normalizeAnswer(answer) === normalizeAnswer(target);
-  const coreCorrect = exact || keywordCoverage >= 0.66 || (keywordCoverage >= 0.5 && tokenCoverage >= 0.72);
-  return {
-    exact,
-    coreCorrect,
-    keywordCoverage,
-    tokenCoverage,
-    coverage: Math.round(Math.max(keywordCoverage, tokenCoverage) * 100),
-    targetTokens: targetList,
-    answerTokens: answerList,
-    missing: targetList.filter((token) => !answerSet.has(token)),
-    extra: answerList.filter((token) => !targetSet.has(token)),
-  };
 }
 
 function renderDiffTokens(tokens, highlighted, className) {
@@ -540,10 +578,10 @@ function renderDiffTokens(tokens, highlighted, className) {
   }).join(" ");
 }
 
-function revealReviewAnswer() {
+function revealReviewAnswer(preferredAnswer = "") {
   const card = activeCard();
   if (!card) return;
-  $("answerTarget").textContent = card.target_sentence || card.answer;
+  $("answerTarget").textContent = preferredAnswer || card.target_sentence || card.answer;
   $("answerTarget").classList.add("revealed");
 }
 
@@ -557,12 +595,17 @@ function checkReviewAnswer() {
     return;
   }
   const target = card.target_sentence || card.answer;
-  const comparison = compareReviewAnswer(answer, target, card.keywords || []);
-  revealReviewAnswer();
+  const comparison = workspace.compareReviewAnswer(
+    answer,
+    target,
+    card.keywords || [],
+    card.accepted_answers || [],
+  );
+  revealReviewAnswer(comparison.matchedTarget);
   $("diffPanel").hidden = false;
   $("targetDiffText").innerHTML = renderDiffTokens(comparison.targetTokens, comparison.missing, "token-missing");
   $("answerDiffText").innerHTML = renderDiffTokens(comparison.answerTokens, comparison.extra, "token-extra");
-  $("coreCoverage").textContent = `核心 ${comparison.coverage}%`;
+  $("coreCoverage").textContent = `匹配度 ${comparison.coverage}%`;
   if (comparison.exact) {
     $("reviewFeedback").textContent = "表达准确，可以标记为“会”。";
     $("reviewFeedback").className = "feedback good";

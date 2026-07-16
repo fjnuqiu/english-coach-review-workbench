@@ -464,6 +464,69 @@ h2 {
   background: linear-gradient(90deg, #bd5550, #d2a33d 55%, var(--green));
 }
 
+.course-mode-actions {
+  width: min(340px, 36vw);
+  display: grid;
+  gap: 8px;
+}
+
+.course-mode-button {
+  min-height: 58px;
+  padding: 9px 12px;
+  display: grid;
+  gap: 1px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  text-align: left;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.course-mode-button strong,
+.course-mode-button small {
+  display: block;
+}
+
+.course-mode-button strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.course-mode-button small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 650;
+}
+
+.course-mode-button.due {
+  border-color: #d9c18f;
+  background: var(--amber-soft);
+}
+
+.course-mode-button.due:hover:not(:disabled) {
+  border-color: #c19749;
+}
+
+.course-mode-button.selected {
+  color: var(--green-dark);
+  border-color: #a9c8bb;
+  background: var(--green-soft);
+}
+
+.course-mode-button.selected:hover:not(:disabled) {
+  border-color: var(--green);
+}
+
+.course-mode-button.full {
+  color: var(--blue);
+  border-color: #bbcee2;
+  background: var(--blue-soft);
+}
+
+.course-mode-button.full:hover:not(:disabled) {
+  border-color: var(--blue);
+}
+
 .button {
   padding: 9px 15px;
 }
@@ -491,6 +554,25 @@ h2 {
   border-radius: 8px;
   background: var(--surface);
   box-shadow: var(--shadow);
+}
+
+.review-mode-context {
+  margin-top: 9px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.review-core-badge {
+  flex: 0 0 auto;
+  padding: 3px 7px;
+  border-radius: 5px;
+  color: var(--green-dark);
+  background: var(--green-soft);
+  font-size: 11px;
+  font-weight: 800;
 }
 
 .session-progress {
@@ -962,9 +1044,22 @@ h2 {
     width: 100%;
   }
 
+  .course-mode-actions {
+    width: 100%;
+  }
+
+  .course-mode-button {
+    min-height: 56px;
+  }
+
   .review-workspace {
     margin-top: 20px;
     padding: 16px;
+  }
+
+  .review-mode-context {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 
   .review-actions .button {
