@@ -38,6 +38,14 @@ COURSES: list[dict[str, Any]] = [
         "id_hint": "pet-food-safety",
         "title": "语法课：a/an/the 的用法（宠物饮食）",
         "summary_zh": "围绕宠物饮食安全学习冠词语境，说明猫、狗不能随意食用的人类食物。",
+        "selected_content": [
+            "The food that you like is not always the best food for your pet.",
+            "Do not feed chocolate to dogs.",
+            "For example, kittens can't drink cow's milk.",
+            "Chocolate is another dangerous food.",
+            "It's an excellent idea to check on the internet before you give human food to pets.",
+            "It might not be safe.",
+        ],
         "review_cards": [
             card("Are you a pet owner?", "你是宠物主人吗？"),
             card("If you have a pet, there is something that you should know.", "如果你养了宠物，有些事情你应该知道。"),
@@ -55,6 +63,11 @@ COURSES: list[dict[str, Any]] = [
         "id_hint": "pet-supplies",
         "title": "词汇课：宠物用品",
         "summary_zh": "学习 supplies、collar、litter box、parrot 和 cage，并用完整句询问和描述宠物用品。",
+        "selected_content": [
+            "Where do you usually get your pet supplies, online or in store?",
+            "Should my dog always wear a collar when I take it out for a walk?",
+            "An automatic litter box saves time and is easy to clean up.",
+        ],
         "review_cards": [
             card("Getting a pet is exciting, and to get ready, you need a lot of supplies.", "养宠物令人兴奋，而为了做好准备，你需要很多用品。"),
             card("Supplies are items or materials that people need to do a task.", "用品是人们完成一项任务所需要的物品或材料。"),
@@ -81,6 +94,13 @@ COURSES: list[dict[str, Any]] = [
         "id_hint": "pet-grooming-and-attachment",
         "title": "词汇课：迎接新宠物",
         "summary_zh": "学习 accompany、company、scratch、groom、grow attached 和 reliable，覆盖新宠物到家后的训练、护理与情感连接。",
+        "selected_content": [
+            "Grooming not only makes your pet pretty, but also keeps it healthy.",
+            "Once you win your pet's love and trust, it will become your most reliable friend.",
+            "If you groom an animal, you wash and clean it to make it look better.",
+            "To grow attached to means to start loving something or someone a lot.",
+            "He is very reliable. If he says he will do something, he will do it.",
+        ],
         "review_cards": [
             card("The excitement of having a new member of the family is usually accompanied by worries and confusion.", "家里有新成员的兴奋通常伴随着担忧和困惑。"),
             card("To accompany means to happen at the same time.", "accompany 的意思是同时发生。"),
@@ -107,6 +127,10 @@ COURSES: list[dict[str, Any]] = [
         "id_hint": "puppy-habits",
         "title": "听力课：小狗狗也是宝宝",
         "summary_zh": "比较婴儿与幼犬在声音、睡眠和依恋方面的相似之处，练习完整听力原文。",
+        "selected_content": [
+            "Puppies spend about 14 hours of the day sleeping.",
+            "While it takes a lot of time to care for a puppy, puppies give a lot of love back to their owners.",
+        ],
         "review_cards": [
             card("Babies and puppies are actually quite similar when it comes to sounds, sleeping, and loving their parents and owners.", "说到声音、睡眠以及爱自己的父母和主人，婴儿和小狗其实非常相似。"),
             card("While adult dogs might not like human \"baby talk\", puppies do!", "成年狗可能不喜欢人类的“婴儿语”，但小狗喜欢！"),
@@ -123,6 +147,14 @@ COURSES: list[dict[str, Any]] = [
         "id_hint": "lets-get-a-puppy-speaking",
         "title": "口语课：我们养只小狗吧",
         "summary_zh": "Jane 和 Brandon 讨论是否养小狗、照顾责任以及改养鹦鹉的建议，并配套核心词汇。",
+        "selected_content": [
+            "Well, you have to walk the dog every day, take him to the vet when he's sick, and feed him when he's hungry.",
+            "You also have to train him, which is a lot of work!",
+            "I'm going to get us a pet!",
+            "Brandon, I don't think buying a pet is a good decision.",
+            "You don't know how to take care of a dog.",
+            "Why don't you get an animal that's easier to take care of?",
+        ],
         "review_cards": [
             card("Hi, Jane.", "嗨，Jane。"),
             card("Guess what?", "你猜怎么着？"),
@@ -156,6 +188,10 @@ COURSES: list[dict[str, Any]] = [
         "id_hint": "pet-decision-and-care",
         "title": "综合课：宠物",
         "summary_zh": "Christina 和 Steve 讨论养宠决定、度假期间的照顾安排、选择斗牛犬、训练和兽医信息。",
+        "selected_content": [
+            "Well, I wanted to ask you for your advice.",
+            "What do you do with them when you go on vacation?",
+        ],
         "review_cards": [
             card("I have great news, Steve!", "Steve，我有一个好消息！"),
             card("What is it, Christina?", "什么消息，Christina？"),
@@ -265,7 +301,8 @@ def apply_import(dry_run: bool = False) -> dict[str, Any]:
     analysis = {
         "courses": [
             {
-                **course,
+                **{key: value for key, value in course.items() if key != "review_cards"},
+                "full_content": course["review_cards"],
                 "learned": [review_card["item"] for review_card in course["review_cards"]],
             }
             for course in COURSES
@@ -332,6 +369,7 @@ def apply_import(dry_run: bool = False) -> dict[str, Any]:
     course_by_id = {course["id"]: course for course in courses}
     for order, source in enumerate(COURSES, start=4):
         target = course_by_id[source["id_hint"]]
+        selected_keys = {normalize(item) for item in source["selected_content"]}
         target.update(
             {
                 "title": source["title"],
@@ -345,6 +383,13 @@ def apply_import(dry_run: bool = False) -> dict[str, Any]:
                     for item in cleaned
                     if normalize(item.get("item", "")) == normalize(review_card["item"])
                 ],
+                "selected_card_ids": [
+                    item["id"]
+                    for selected_item in source["selected_content"]
+                    for item in cleaned
+                    if normalize(item.get("item", "")) == normalize(selected_item)
+                    and normalize(item.get("item", "")) in selected_keys
+                ],
             }
         )
     COURSES_PATH.write_text(json.dumps(courses, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -355,6 +400,7 @@ def apply_import(dry_run: bool = False) -> dict[str, Any]:
     return {
         "courses": len(COURSES),
         "cards": sum(len(course["review_cards"]) for course in COURSES),
+        "selected_cards": sum(len(course["selected_content"]) for course in COURSES),
         "added": len(added_ids),
         "migrations": len(migrations),
         "note_path": result.get("note_path", ""),

@@ -237,7 +237,10 @@ def review_card(item: dict[str, Any]) -> dict[str, Any]:
         "answer": item.get("item", ""),
         "target_sentence": target_sentence(item),
         "example": item.get("example", ""),
+        "accepted_answers": item.get("accepted_answers", []),
+        "note": item.get("note", ""),
         "keywords": review_keywords(item),
+        "mastery_score": course_store.card_mastery_score(item),
         "last_result": item.get("last_result", ""),
         "next_due": item.get("next_due", ""),
         "source": item.get("source", ""),
@@ -580,7 +583,14 @@ OPENAI_LEARNING_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "object",
                 "additionalProperties": False,
-                "required": ["id_hint", "title", "summary_zh", "learned", "review_cards"],
+                "required": [
+                    "id_hint",
+                    "title",
+                    "summary_zh",
+                    "learned",
+                    "full_content",
+                    "selected_content",
+                ],
                 "properties": {
                     "id_hint": {
                         "type": "string",
@@ -599,9 +609,9 @@ OPENAI_LEARNING_SCHEMA: dict[str, Any] = {
                         "items": {"type": "string"},
                         "description": "本课程新学的英文表达或完整句。",
                     },
-                    "review_cards": {
+                    "full_content": {
                         "type": "array",
-                        "description": "本课程画面中所有可确认的英文句子、对话句、定义、例句和词汇卡，不做数量截断。",
+                        "description": "完整内容：本课程画面中所有可确认的英文句子、对话句、定义、例句和词汇卡，不做数量截断。",
                         "items": {
                             "type": "object",
                             "additionalProperties": False,
@@ -613,6 +623,11 @@ OPENAI_LEARNING_SCHEMA: dict[str, Any] = {
                                 "note": {"type": "string"},
                             },
                         },
+                    },
+                    "selected_content": {
+                        "type": "array",
+                        "description": "精选内容：必须掌握的核心卡片，值必须与 full_content 中的 item 完全一致。",
+                        "items": {"type": "string"},
                     },
                 },
             },
@@ -646,8 +661,10 @@ def openai_learning_prompt(file_names: list[str], ocr_text: str) -> str:
             "- 每门课程整理一个直观中文说明，但不要用摘要代替原始学习内容。",
             "- 完整保留画面中所有可确认的英文句子、对话句、定义、例句以及独立词汇或短语，不得只提炼重点，也不得限制为 10 条。",
             "- 相同内容在同一门课程内只保留一次；无法确认的 OCR 噪声不要收录。",
-            "- 每张 review_cards 的 prompt 只写完整中文意思，不要写“请用英文表达”等提示语。",
-            "- 每张 review_cards 的 example 写完整英文参考句，方便页面默认隐藏后检查。",
+            "- full_content 是完整内容；每张卡的 prompt 只写完整中文意思，不要写“请用英文表达”等提示语。",
+            "- full_content 每张卡的 example 写完整英文参考句，方便页面默认隐藏后检查。",
+            "- selected_content 是核心必会内容，只列 full_content 中最重要、最值得主动表达的 item 原文，通常占完整内容的 20%–35%。",
+            "- selected_content 的每个值必须和 full_content 中某个 item 完全一致；不得另写、改写或新增卡片。",
             "- 不确定的内容不要编造；OCR 和图片冲突时，以图片可见内容为准。",
             "",
             f"来源文件：{source}",
@@ -758,9 +775,19 @@ def call_openai_learning_analysis(
     return analysis
 
 
-def ai_review_candidates(ai_analysis: dict[str, Any]) -> list[dict[str, str]]:
-    candidates: list[dict[str, str]] = []
-    for raw_card in ai_analysis.get("review_cards", []):
+def analysis_full_content(ai_analysis: dict[str, Any]) -> list[Any]:
+    """Return the complete card list while accepting the legacy field name."""
+
+    if "full_content" in ai_analysis:
+        value = ai_analysis.get("full_content", [])
+    else:
+        value = ai_analysis.get("review_cards", [])
+    return value if isinstance(value, list) else []
+
+
+def ai_review_candidates(ai_analysis: dict[str, Any]) -> list[dict[str, Any]]:
+    candidates: list[dict[str, Any]] = []
+    for raw_card in analysis_full_content(ai_analysis):
         if not isinstance(raw_card, dict):
             continue
         item = str(raw_card.get("item") or raw_card.get("example") or "").strip()
@@ -775,9 +802,40 @@ def ai_review_candidates(ai_analysis: dict[str, Any]) -> list[dict[str, str]]:
                 "example": example or item,
                 "prompt": prompt,
                 "note": note or prompt,
+                "accepted_answers": [
+                    str(answer).strip()
+                    for answer in raw_card.get("accepted_answers", [])
+                    if str(answer).strip()
+                ] if isinstance(raw_card.get("accepted_answers", []), list) else [],
             }
         )
     return candidates
+
+
+def analysis_selected_items(
+    ai_analysis: dict[str, Any],
+    candidates: list[dict[str, Any]],
+) -> list[str]:
+    """Validate and return selected item references in their requested order.
+
+    Legacy analyses did not distinguish a curated subset, so all imported cards
+    remain selected until that course is curated explicitly.
+    """
+
+    if "selected_content" not in ai_analysis:
+        return [candidate["item"] for candidate in candidates]
+    selected = ai_analysis.get("selected_content", [])
+    if not isinstance(selected, list) or any(not isinstance(item, str) for item in selected):
+        raise ValueError("selected_content must be an array of full_content item strings")
+    candidate_items = {candidate["item"] for candidate in candidates}
+    cleaned = list(dict.fromkeys(item.strip() for item in selected if item.strip()))
+    missing = [item for item in cleaned if item not in candidate_items]
+    if missing:
+        raise ValueError(
+            "selected_content must be a subset of full_content; unknown item: "
+            + missing[0]
+        )
+    return cleaned
 
 
 def normalize_analysis_courses(ai_analysis: dict[str, Any]) -> list[dict[str, Any]]:
@@ -791,7 +849,12 @@ def normalize_analysis_courses(ai_analysis: dict[str, Any]) -> list[dict[str, An
             "summary_zh": str(ai_analysis.get("story_summary_zh") or "").strip(),
             "completed": str(ai_analysis.get("completed") or "").strip(),
             "learned": ai_analysis.get("learned", []),
-            "review_cards": ai_analysis.get("review_cards", []),
+            "full_content": analysis_full_content(ai_analysis),
+            **(
+                {"selected_content": ai_analysis.get("selected_content", [])}
+                if "selected_content" in ai_analysis
+                else {}
+            ),
         }
     ]
 
@@ -817,7 +880,7 @@ def combined_course_analysis(courses: list[dict[str, Any]]) -> dict[str, Any]:
     cards = [
         card
         for course in courses
-        for card in course.get("review_cards", [])
+        for card in analysis_full_content(course)
         if isinstance(card, dict)
     ]
     title = "、".join(title for title in titles if title) or "学习材料整理"
@@ -860,7 +923,7 @@ def build_ai_media_checkin_text(
 
 def upsert_media_review_candidates(
     items: list[dict[str, Any]],
-    candidates: list[dict[str, str]],
+    candidates: list[dict[str, Any]],
     on_date: Any,
     course_id: str = "",
 ) -> tuple[list[dict[str, Any]], dict[str, list[str]]]:
@@ -882,6 +945,8 @@ def upsert_media_review_candidates(
         item["example"] = candidate["example"]
         item["prompt"] = candidate["prompt"]
         item["note"] = candidate["note"]
+        if candidate.get("accepted_answers"):
+            item["accepted_answers"] = candidate["accepted_answers"]
         item["source"] = f"media upload {on_date.isoformat()}"
         if course_id:
             item["course_id"] = course_id
@@ -899,6 +964,7 @@ def upsert_course_record(
     file_names: list[str],
     on_date: Any,
     card_ids: list[str],
+    selected_card_ids: list[str] | None = None,
 ) -> list[dict[str, Any]]:
     updated = [dict(course) for course in courses]
     existing = next((course for course in updated if course.get("id") == course_id), None)
@@ -922,6 +988,8 @@ def upsert_course_record(
         dict.fromkeys([*existing.get("source_files", []), *file_names])
     )
     existing["card_ids"] = list(dict.fromkeys([*existing.get("card_ids", []), *card_ids]))
+    if selected_card_ids is not None:
+        existing["selected_card_ids"] = list(dict.fromkeys(selected_card_ids))
     return updated
 
 
@@ -968,6 +1036,7 @@ def record_media_learning_from_ocr(
     for index, course_analysis in enumerate(analysis_courses):
         course_id = analysis_course_id(course_analysis, date_value, index)
         candidates = ai_review_candidates(course_analysis)
+        selected_items = analysis_selected_items(course_analysis, candidates)
         updated, course_changes = upsert_media_review_candidates(
             updated,
             candidates,
@@ -981,6 +1050,11 @@ def record_media_learning_from_ocr(
             item_index = coach.find_item_index(updated, candidate["item"])
             if item_index is not None:
                 card_ids.append(updated[item_index]["id"])
+        selected_card_ids = []
+        for selected_item in selected_items:
+            item_index = coach.find_item_index(updated, selected_item)
+            if item_index is not None:
+                selected_card_ids.append(updated[item_index]["id"])
         courses = upsert_course_record(
             courses,
             course_id,
@@ -988,6 +1062,7 @@ def record_media_learning_from_ocr(
             file_names,
             date_value,
             card_ids,
+            selected_card_ids,
         )
     coach.save_items(updated, state_path)
     course_store.save_courses(courses, resolved_courses_path)
@@ -1194,11 +1269,12 @@ def codex_media_job_prompt(manifest_path: Path) -> str:
             "1. 读取 job.json，结合 OCR 文本和随本次 prompt 附带的图片理解学习内容。",
             "2. 生成一个 JSON 对象，顶层字段必须是 courses。",
             "3. 先按实际课程拆分；录屏包含多节课时，必须输出多个课程，不要压成一门总课。",
-            "4. courses 每条包含 id_hint、title、summary_zh、learned、review_cards。",
-            "5. 每门课程整理直观中文说明，并完整保留所有可确认的英文句子、对话句、定义、例句和独立词汇，不要提炼重点，不要限制为 10 条。",
-            "6. review_cards 每条包含 item、prompt、example、note；prompt 只能是完整中文意思；example 是默认隐藏的英文参考句；不确定不要编造。",
-            "7. 用 stdin 调用：python3 tools/codex_inbox.py complete --manifest \"<manifest_path>\" --analysis -",
-            "8. 不要修改无关文件，不要启动 Web 服务。完成后最终回复一句话说明 note_path 和复习卡数量。",
+            "4. courses 每条包含 id_hint、title、summary_zh、learned、full_content、selected_content。",
+            "5. 每门课程的 full_content 是完整内容：保留所有可确认的英文句子、对话句、定义、例句和独立词汇，不要提炼重点，不要限制为 10 条。",
+            "6. full_content 每条包含 item、prompt、example、note；prompt 只能是完整中文意思；example 是默认隐藏的英文参考句；不确定不要编造。",
+            "7. selected_content 是核心必会内容，通常选 full_content 的 20%–35%；每个值必须与 full_content 的某个 item 完全一致，不得新增或改写。",
+            "8. 用 stdin 调用：python3 tools/codex_inbox.py complete --manifest \"<manifest_path>\" --analysis -",
+            "9. 不要修改无关文件，不要启动 Web 服务。完成后最终回复一句话说明 note_path、完整卡数量和精选卡数量。",
         ]
     )
 
@@ -1491,14 +1567,27 @@ def dashboard_payload(
         payload = {
             key: value
             for key, value in course.items()
-            if key not in {"cards", "due_cards"}
+            if key not in {
+                "cards",
+                "due_cards",
+                "selected_cards",
+                "selected_due_cards",
+            }
         }
         payload["all_cards"] = [review_card(item) for item in course["cards"]]
+        payload["full_content"] = payload["all_cards"]
         payload["today_cards"] = [review_card(item) for item in course["due_cards"]]
+        payload["selected_cards"] = [
+            review_card(item) for item in course["selected_cards"]
+        ]
+        payload["selected_content"] = payload["selected_cards"]
+        payload["selected_today_cards"] = [
+            review_card(item) for item in course["selected_due_cards"]
+        ]
         course_payloads.append(payload)
     course_payloads.sort(
         key=lambda course: (
-            float(course.get("mastery_score", 0)),
+            float(course.get("priority_mastery_score", course.get("mastery_score", 0))),
             -int(course.get("due_count", 0)),
             int(course.get("order", 9999)),
             str(course.get("title", "")),
@@ -1585,6 +1674,20 @@ def validate_sync_state_payload(payload: Any) -> tuple[list[dict[str, Any]], lis
             for card_id in card_ids
         ):
             raise ValueError(f"course {course.get('id', '')} card_ids must be an array of ids")
+        if "selected_card_ids" in course:
+            selected_ids = course.get("selected_card_ids", [])
+            if not isinstance(selected_ids, list) or any(
+                not isinstance(card_id, str) or not card_id.strip()
+                for card_id in selected_ids
+            ):
+                raise ValueError(
+                    f"course {course.get('id', '')} selected_card_ids must be an array of ids"
+                )
+            unknown_selected_ids = [card_id for card_id in selected_ids if card_id not in card_ids]
+            if unknown_selected_ids:
+                raise ValueError(
+                    f"course {course.get('id', '')} selected_card_ids must be a subset of card_ids"
+                )
 
     return courses, review_items
 

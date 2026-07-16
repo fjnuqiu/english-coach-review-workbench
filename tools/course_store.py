@@ -39,9 +39,22 @@ def save_courses(courses: list[dict[str, Any]], path: Path = DEFAULT_COURSES) ->
         handle.write("\n")
 
 
-def _card_sort_key(course: dict[str, Any], item: dict[str, Any]) -> tuple[int, str]:
-    order = {card_id: index for index, card_id in enumerate(course.get("card_ids", []))}
+def _card_sort_key(
+    course: dict[str, Any],
+    item: dict[str, Any],
+    order_field: str = "card_ids",
+) -> tuple[int, str]:
+    order = {card_id: index for index, card_id in enumerate(course.get(order_field, []))}
     return (order.get(item.get("id", ""), len(order)), str(item.get("id", "")))
+
+
+def selected_card_ids(course: dict[str, Any]) -> list[str]:
+    """Return the curated card ids, falling back to all cards for legacy courses."""
+
+    if "selected_card_ids" in course:
+        value = course.get("selected_card_ids", [])
+        return value if isinstance(value, list) else []
+    return course.get("card_ids", []) if isinstance(course.get("card_ids", []), list) else []
 
 
 def _effective_result(item: dict[str, Any]) -> str:
@@ -143,6 +156,42 @@ def group_cards_by_course(
             sum(card_mastery_score(item) for item in active_cards) / len(active_cards),
             1,
         ) if active_cards else 0.0
+        selected_ids = selected_card_ids(course)
+        selected_id_set = set(selected_ids)
+        selected_cards = sorted(
+            [item for item in cards if item.get("id") in selected_id_set],
+            key=lambda item: _card_sort_key(
+                {"selected_card_ids": selected_ids},
+                item,
+                "selected_card_ids",
+            ),
+        )
+        selected_active_cards = [
+            item for item in selected_cards if item.get("status") != "retired"
+        ]
+        selected_due_cards = [
+            item
+            for item in selected_active_cards
+            if str(item.get("next_due") or "9999-12-31") <= date_text
+        ]
+        selected_completed_today = sum(
+            1
+            for item in selected_cards
+            if any(entry.get("date") == date_text for entry in item.get("history", []))
+        )
+        selected_mastered_count = sum(
+            1
+            for item in selected_active_cards
+            if item.get("last_result") == "pass"
+        )
+        selected_mastery_score = round(
+            sum(card_mastery_score(item) for item in selected_active_cards)
+            / len(selected_active_cards),
+            1,
+        ) if selected_active_cards else 0.0
+        priority_mastery_score = (
+            selected_mastery_score if selected_active_cards else mastery_score
+        )
         aggregate = copy.deepcopy(course)
         aggregate.update(
             {
@@ -154,6 +203,18 @@ def group_cards_by_course(
                 "mastered_count": mastered_count,
                 "mastery_score": mastery_score,
                 "mastery_label": mastery_label(mastery_score, bool(active_cards)),
+                "selected_cards": selected_cards,
+                "selected_due_cards": selected_due_cards,
+                "selected_due_count": len(selected_due_cards),
+                "selected_completed_today": selected_completed_today,
+                "selected_total_count": len(selected_cards),
+                "selected_mastered_count": selected_mastered_count,
+                "selected_mastery_score": selected_mastery_score,
+                "selected_mastery_label": mastery_label(
+                    selected_mastery_score,
+                    bool(selected_active_cards),
+                ),
+                "priority_mastery_score": priority_mastery_score,
             }
         )
         aggregates.append(aggregate)
