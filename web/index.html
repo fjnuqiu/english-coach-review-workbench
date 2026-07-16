@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f6f5">
+  <title>English Coach</title>
+  <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-header-inner">
+      <div class="brand" aria-label="English Coach">
+        <span class="brand-mark" aria-hidden="true">EC</span>
+        <div>
+          <strong>English Coach</strong>
+          <span>课程复习工作台</span>
+        </div>
+      </div>
+      <div class="header-tools">
+        <button class="tool-button account-button" id="accountToolButton" type="button" aria-label="账号同步" onclick="openAccountDialog()">
+          <span class="tool-icon" aria-hidden="true">●</span>
+          <span id="accountToolLabel">登录同步</span>
+        </button>
+        <button class="tool-button" id="translateToolButton" type="button" aria-label="中译英" onclick="openToolDialog('translateDialog')">
+          <span class="tool-icon" aria-hidden="true">译</span>
+          <span>中译英</span>
+        </button>
+        <button class="tool-button primary" id="importToolButton" type="button" aria-label="导入材料" onclick="openToolDialog('importDialog')">
+          <span class="tool-icon" aria-hidden="true">＋</span>
+          <span>导入材料</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-shell">
+    <section class="workspace-intro" aria-labelledby="pageTitle">
+      <div>
+        <p class="eyebrow">MY COURSES</p>
+        <h1 id="pageTitle">课程复习</h1>
+        <p>选择一门课程，完成今天到期的句子。</p>
+      </div>
+      <label class="date-field">
+        <span>复习日期</span>
+        <input id="reviewDateInput" type="date" aria-label="复习日期">
+      </label>
+    </section>
+
+    <section class="progress-strip" id="courseProgress" aria-label="复习进度">
+      <div>
+        <span>连接</span>
+        <strong id="backendStatus">检查中</strong>
+      </div>
+      <div>
+        <span>课程</span>
+        <strong id="courseCountMetric">0</strong>
+      </div>
+      <div>
+        <span>待复习</span>
+        <strong id="dueCountMetric">0</strong>
+      </div>
+      <div>
+        <span>今日完成</span>
+        <strong id="completedCountMetric">0</strong>
+      </div>
+    </section>
+
+    <section class="course-section" aria-labelledby="courseSectionTitle">
+      <div class="section-heading">
+        <div>
+          <h2 id="courseSectionTitle">我的课程</h2>
+          <p>优先显示有到期任务的课程，点击课程可查看概要并开始复习。</p>
+        </div>
+        <div class="section-actions">
+          <label class="sort-field">
+            <span>课程排序</span>
+            <select id="courseSortSelect" aria-label="课程排序">
+              <option value="mastery">最不熟优先</option>
+              <option value="due">待复习最多</option>
+              <option value="original">课程原顺序</option>
+            </select>
+          </label>
+          <button class="icon-button" type="button" title="刷新课程" aria-label="刷新课程" onclick="refreshDashboard()">↻</button>
+        </div>
+      </div>
+      <div class="course-list" id="courseList" aria-live="polite">
+        <div class="loading-state">正在读取课程…</div>
+      </div>
+    </section>
+
+    <section class="review-workspace" id="courseReviewWorkspace" hidden aria-labelledby="activeCourseTitle">
+      <div class="review-header">
+        <div>
+          <p class="eyebrow" id="sessionLabel">TODAY'S REVIEW</p>
+          <h2 id="activeCourseTitle">课程复习</h2>
+          <p id="activeCourseSummary"></p>
+        </div>
+        <button class="icon-button" type="button" title="关闭复习" aria-label="关闭复习" onclick="closeCourseReview()">×</button>
+      </div>
+
+      <div class="session-progress" aria-label="课程复习进度">
+        <div><span id="reviewPositionText">0 / 0</span><span id="sessionProgressText">等待开始</span></div>
+        <div class="progress-track"><span id="sessionProgressBar"></span></div>
+      </div>
+
+      <div class="review-empty" id="reviewEmptyState" hidden>
+        <strong>这门课程今天的复习已完成</strong>
+        <p>系统会根据本次结果安排下一次复习。</p>
+      </div>
+
+      <div class="review-card" id="reviewCard">
+        <div class="prompt-block">
+          <span>中文意思</span>
+          <p id="reviewPrompt">选择课程后开始复习。</p>
+        </div>
+
+        <label class="answer-field">
+          <span>你的英文</span>
+          <textarea id="answerInput" rows="3" placeholder="输入英文，或点击录音后说出完整句子。"></textarea>
+        </label>
+
+        <div class="action-row review-actions">
+          <button class="button secondary" id="reviewSpeechButton" type="button" onclick="startReviewSpeech()">开始录音</button>
+          <button class="button stop" id="reviewStopButton" type="button" onclick="stopReviewSpeech()" disabled>结束录音</button>
+          <button class="button primary" type="button" onclick="checkReviewAnswer()">检查答案</button>
+          <button class="button quiet" type="button" onclick="revealReviewAnswer()">看答案</button>
+          <button class="icon-button inline" type="button" title="播放参考英文" aria-label="播放参考英文" onclick="playActiveAnswer()">▶</button>
+        </div>
+
+        <div class="answer-target" id="answerTarget" aria-live="polite">参考答案默认隐藏。</div>
+
+        <div class="feedback" id="reviewFeedback" aria-live="polite">
+          先回忆并输入或说出英文，再检查答案。
+        </div>
+
+        <div class="diff-panel" id="diffPanel" hidden>
+          <div>
+            <span>参考句</span>
+            <p id="targetDiffText"></p>
+          </div>
+          <div>
+            <span>你的表达</span>
+            <p id="answerDiffText"></p>
+          </div>
+          <strong id="coreCoverage">核心 0%</strong>
+        </div>
+
+        <div class="session-navigation">
+          <button class="button quiet" id="previousReviewButton" type="button" onclick="goToPreviousReviewCard()">← 上一个</button>
+          <button class="button quiet" id="nextReviewButton" type="button" onclick="goToNextReviewCard()">下一个 →</button>
+        </div>
+
+        <div class="grade-row" aria-label="掌握情况">
+          <button type="button" class="grade-button fail" onclick="submitReviewResult('fail')"><span>不会</span><small>明天再复习</small></button>
+          <button type="button" class="grade-button shaky" onclick="submitReviewResult('shaky')"><span>不熟</span><small>缩短间隔</small></button>
+          <button type="button" class="grade-button pass" onclick="submitReviewResult('pass')"><span>会</span><small>拉长间隔</small></button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="tool-dialog" id="accountDialog">
+    <form class="dialog-shell" onsubmit="loginAccount(event)">
+      <div class="dialog-header">
+        <div><span class="eyebrow">CLOUD SYNC</span><h2>账号与学习同步</h2></div>
+        <button class="icon-button" type="button" aria-label="关闭" onclick="closeToolDialog('accountDialog')">×</button>
+      </div>
+      <p>登录后，课程内容、熟练度和复习进度会保存到你的私有账号，并同步到其他设备。</p>
+
+      <div id="signedOutAccountPanel">
+        <label class="answer-field compact-field">
+          <span>邮箱</span>
+          <input id="accountEmailInput" type="email" autocomplete="email" placeholder="you@example.com" required>
+        </label>
+        <label class="answer-field compact-field">
+          <span>密码</span>
+          <input id="accountPasswordInput" type="password" autocomplete="current-password" minlength="6" placeholder="至少 6 位" required>
+        </label>
+        <div class="dialog-actions account-actions">
+          <button class="button quiet" id="signUpButton" type="button" onclick="createAccount()">注册账号</button>
+          <button class="button primary" id="signInButton" type="submit">登录并同步</button>
+        </div>
+      </div>
+
+      <div class="signed-in-panel" id="signedInAccountPanel" hidden>
+        <div class="account-summary">
+          <span class="account-avatar" aria-hidden="true">✓</span>
+          <div><strong id="signedInEmail">已登录</strong><span id="accountSyncSummary">等待同步</span></div>
+        </div>
+        <div class="dialog-actions account-actions">
+          <button class="button quiet" type="button" onclick="logoutAccount()">退出登录</button>
+          <button class="button primary" id="syncNowButton" type="button" onclick="syncAccountNow()">立即同步</button>
+        </div>
+      </div>
+      <div class="dialog-status" id="accountStatus" aria-live="polite"></div>
+      <p class="privacy-note">每个账号的数据通过数据库行级权限隔离；密码不会保存在本地学习文件中。</p>
+    </form>
+  </dialog>
+
+  <dialog class="tool-dialog" id="importDialog">
+    <form method="dialog" class="dialog-shell" onsubmit="return false">
+      <div class="dialog-header">
+        <div><span class="eyebrow">IMPORT</span><h2>导入学习材料</h2></div>
+        <button class="icon-button" type="button" aria-label="关闭" onclick="closeToolDialog('importDialog')">×</button>
+      </div>
+      <p>上传截图或录屏。Codex 会先按实际课程拆分，再生成每门课的总结和复习句。</p>
+      <div class="local-only-notice" id="importLocalOnlyNotice" hidden>云端网站暂不直接处理文件。请在 Mac 本地工作台导入，完成后登录同一账号同步。</div>
+      <label class="file-drop" for="mediaFileInput">
+        <span class="file-drop-icon" aria-hidden="true">＋</span>
+        <strong>选择截图或录屏</strong>
+        <small>支持多选；文件只保存在本地学习档案</small>
+        <input id="mediaFileInput" type="file" multiple accept="image/*,video/*">
+      </label>
+      <div class="selected-files" id="selectedFiles">尚未选择文件</div>
+      <div class="dialog-actions">
+        <button class="button quiet" type="button" onclick="closeToolDialog('importDialog')">取消</button>
+        <button class="button primary" id="syncMediaButton" type="button" onclick="syncMediaFilesToCodex()">同步给 Codex 整理</button>
+      </div>
+      <div class="dialog-status" id="mediaStatus" aria-live="polite"></div>
+    </form>
+  </dialog>
+
+  <dialog class="tool-dialog" id="translateDialog">
+    <form method="dialog" class="dialog-shell" onsubmit="return false">
+      <div class="dialog-header">
+        <div><span class="eyebrow">TRANSLATE</span><h2>中文转英文</h2></div>
+        <button class="icon-button" type="button" aria-label="关闭" onclick="closeToolDialog('translateDialog')">×</button>
+      </div>
+      <div class="local-only-notice" id="translateLocalOnlyNotice" hidden>云端网站暂不提供自动翻译，请在 Mac 本地工作台使用；课程复习和进度同步不受影响。</div>
+      <label class="answer-field">
+        <span>中文句子</span>
+        <textarea id="chineseSpeechInput" rows="3" placeholder="例如：当前进展是我们已经完成了 API 草稿。"></textarea>
+      </label>
+      <div class="action-row">
+        <button class="button secondary" id="chineseSpeechButton" type="button" onclick="startChineseTranslateSpeech()">开始录音</button>
+        <button class="button stop" id="chineseSpeechStopButton" type="button" onclick="stopChineseTranslateSpeech()" disabled>结束录音</button>
+        <button class="button primary" type="button" onclick="translateChineseSpeechText()">翻译成英文</button>
+        <button class="button quiet" type="button" onclick="playTranslatedEnglish()">播放英文</button>
+      </div>
+      <div class="translation-output" id="translationOutput">英文结果会显示在这里。</div>
+      <div class="dialog-status" id="translationStatus" aria-live="polite"></div>
+    </form>
+  </dialog>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="/assets/workspace-core.js"></script>
+  <script src="/assets/cloud-sync.js"></script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

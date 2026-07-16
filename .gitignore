@@ -1,0 +1,60 @@
+# Dependencies and generated builds
+node_modules/
+dist/
+dist-*/
+.vite/
+
+# Environment files and local credentials
+.env
+.env.*
+!.env.example
+
+# Personal learning data and generated imports
+state/
+notes/
+uploads/
+codex-inbox/
+imports/
+review-queue.md
+week-*-plan.md
+
+# User-provided media
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.heic
+*.heif
+*.mp4
+*.mov
+*.m4v
+*.avi
+*.mkv
+*.webm
+*.mp3
+*.m4a
+*.aac
+*.wav
+
+# Logs and backups
+*.log
+*.out
+*.err
+*.bak
+*.backup
+*.old
+*.orig
+*~
+backup/
+backups/
+**/backups/
+
+# Local runtime and operating-system files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.DS_Store
+
+# Supabase CLI local state
+supabase/.temp/
