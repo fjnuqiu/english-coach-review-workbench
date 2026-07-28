@@ -77,10 +77,15 @@ def _interval_ratio(item: dict[str, Any]) -> float:
     return min(max(interval_days, 0.0), MAX_REVIEW_INTERVAL_DAYS) / MAX_REVIEW_INTERVAL_DAYS
 
 
+def _history_entries(item: dict[str, Any]) -> list[dict[str, Any]]:
+    history = item.get("history")
+    return history if isinstance(history, list) else []
+
+
 def _history_pass_ratio(item: dict[str, Any]) -> float:
     results = [
         str(entry.get("result") or "").strip().lower()
-        for entry in item.get("history", [])
+        for entry in _history_entries(item)
         if isinstance(entry, dict)
         and str(entry.get("result") or "").strip().lower() in {"pass", "shaky", "fail"}
     ]
@@ -131,7 +136,7 @@ def _recent_review_status(
     earliest_date = on_date - dt.timedelta(days=RECENT_REVIEW_WINDOW_DAYS - 1)
     latest_review_date: dt.date | None = None
     for card in cards:
-        for entry in card.get("history", []):
+        for entry in _history_entries(card):
             if not isinstance(entry, dict):
                 continue
             try:
@@ -170,6 +175,13 @@ def group_cards_by_course(
     for course in courses:
         cards = sorted(grouped[course["id"]], key=lambda item: _card_sort_key(course, item))
         active_cards = [item for item in cards if item.get("status") != "retired"]
+        review_rounds = min(
+            (
+                len(_history_entries(item))
+                for item in active_cards
+            ),
+            default=0,
+        )
         due_cards = [
             item
             for item in active_cards
@@ -178,7 +190,10 @@ def group_cards_by_course(
         completed_today = sum(
             1
             for item in cards
-            if any(entry.get("date") == date_text for entry in item.get("history", []))
+            if any(
+                isinstance(entry, dict) and entry.get("date") == date_text
+                for entry in _history_entries(item)
+            )
         )
         recent_review = _recent_review_status(cards, on_date)
         mastered_count = sum(
@@ -211,7 +226,10 @@ def group_cards_by_course(
         selected_completed_today = sum(
             1
             for item in selected_cards
-            if any(entry.get("date") == date_text for entry in item.get("history", []))
+            if any(
+                isinstance(entry, dict) and entry.get("date") == date_text
+                for entry in _history_entries(item)
+            )
         )
         selected_mastered_count = sum(
             1
@@ -232,6 +250,7 @@ def group_cards_by_course(
                 "cards": cards,
                 "due_cards": due_cards,
                 "due_count": len(due_cards),
+                "review_rounds": review_rounds,
                 "completed_today": completed_today,
                 **recent_review,
                 "total_count": len(cards),

@@ -1587,9 +1587,10 @@ def dashboard_payload(
         course_payloads.append(payload)
     course_payloads.sort(
         key=lambda course: (
+            int(course.get("review_rounds", 0)),
             int(bool(course.get("reviewed_recently", False))),
-            float(course.get("priority_mastery_score", course.get("mastery_score", 0))),
             -int(course.get("due_count", 0)),
+            float(course.get("priority_mastery_score", course.get("mastery_score", 0))),
             int(course.get("order", 9999)),
             str(course.get("title", "")),
         )

@@ -43,6 +43,77 @@ test("course dashboard orders the least familiar course first", () => {
   assert.deepEqual(dashboard.courses[0].full_content, dashboard.courses[0].all_cards);
 });
 
+test("full-course review rounds order cloud courses before due cards", () => {
+  const courses = [
+    { id: "reviewed-course", title: "Reviewed", order: 1, card_ids: ["reviewed-one", "reviewed-two"] },
+    { id: "new-course", title: "New", order: 2, card_ids: ["new-one", "new-two"] },
+  ];
+  const reviewItems = [
+    {
+      id: "reviewed-one",
+      course_id: "reviewed-course",
+      item: "Reviewed one",
+      last_result: "pending",
+      interval_days: 1,
+      next_due: "2026-07-16",
+      history: [{ date: "2026-07-10", result: "pass" }],
+    },
+    {
+      id: "reviewed-two",
+      course_id: "reviewed-course",
+      item: "Reviewed two",
+      last_result: "pending",
+      interval_days: 1,
+      next_due: "2026-07-16",
+      history: [{ date: "2026-07-11", result: "pass" }],
+    },
+    {
+      id: "new-one",
+      course_id: "new-course",
+      item: "New one",
+      last_result: "pending",
+      interval_days: 1,
+      next_due: "2026-08-01",
+      history: [],
+    },
+    {
+      id: "new-two",
+      course_id: "new-course",
+      item: "New two",
+      last_result: "pending",
+      interval_days: 1,
+      next_due: "2026-08-01",
+      history: [],
+    },
+  ];
+
+  const dashboard = workspace.dashboardFromWorkspace(courses, reviewItems, "2026-07-16");
+
+  assert.deepEqual(dashboard.courses.map((course) => course.id), ["new-course", "reviewed-course"]);
+  assert.equal(dashboard.courses[0].review_rounds, 0);
+  assert.equal(dashboard.courses[1].review_rounds, 1);
+});
+
+test("dashboard ignores malformed object histories", () => {
+  const dashboard = workspace.dashboardFromWorkspace(
+    [{ id: "malformed", title: "Malformed history", card_ids: ["card"] }],
+    [{
+      id: "card",
+      course_id: "malformed",
+      item: "Sentence",
+      last_result: "pass",
+      interval_days: 30,
+      next_due: "2026-07-16",
+      history: { date: "2026-07-16", result: "pass" },
+    }],
+    "2026-07-16",
+  );
+
+  assert.equal(dashboard.courses.length, 1);
+  assert.equal(dashboard.courses[0].review_rounds, 0);
+  assert.equal(dashboard.courses[0].completed_today, 0);
+});
+
 test("recently reviewed courses remain marked for three days and move below new work", () => {
   const courses = [
     { id: "recent", title: "Recent course", order: 1, card_ids: ["recent-card"], selected_card_ids: ["recent-card"] },
@@ -81,7 +152,7 @@ test("recently reviewed courses remain marked for three days and move below new 
 
   const afterExpiry = workspace.dashboardFromWorkspace(courses, reviewItems, "2026-07-19");
   assert.equal(afterExpiry.courses.find((course) => course.id === "recent").reviewed_recently, false);
-  assert.deepEqual(afterExpiry.courses.map((course) => course.id), ["recent", "unreviewed"]);
+  assert.deepEqual(afterExpiry.courses.map((course) => course.id), ["unreviewed", "recent"]);
 });
 
 test("selected content is an ordered subset with its own mastery", () => {
@@ -343,7 +414,6 @@ test("page exposes account sync and mastery sorting controls", async () => {
   assert.match(html, /id="accountToolButton"/);
   assert.match(html, /id="courseSortSelect"/);
   assert.match(html, /video-course-seed\.js/);
-  assert.match(html, /Least familiar first/);
   assert.match(html, /Chinese prompt/);
   assert.match(html, /Your English/);
   assert.match(script, /mastery_score/);

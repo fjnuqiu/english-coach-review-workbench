@@ -72,8 +72,12 @@
     ] || "pending";
   }
 
+  function historyEntries(item) {
+    return Array.isArray(item?.history) ? item.history : [];
+  }
+
   function historyPassRatio(item) {
-    const results = (item?.history || [])
+    const results = historyEntries(item)
       .map((entry) => String(entry?.result || "").trim().toLowerCase())
       .filter((result) => ["pass", "shaky", "fail"].includes(result));
     return results.length ? results.filter((result) => result === "pass").length / results.length : 0;
@@ -286,7 +290,7 @@
     const earliestDate = addDays(dateText, -(RECENT_REVIEW_WINDOW_DAYS - 1));
     let latestReviewDate = "";
     for (const card of cards || []) {
-      for (const entry of card?.history || []) {
+      for (const entry of historyEntries(card)) {
         const reviewedOn = String(entry?.date || "").trim();
         if (
           /^\d{4}-\d{2}-\d{2}$/.test(reviewedOn)
@@ -317,8 +321,11 @@
       const cards = [...(grouped.get(course.id) || [])].sort((a, b) => courseCardSort(course, a, b));
       const activeCards = cards.filter((item) => item.status !== "retired");
       const dueCards = activeCards.filter((item) => String(item.next_due || "9999-12-31") <= dateText);
+      const reviewRounds = activeCards.length
+        ? Math.min(...activeCards.map((item) => historyEntries(item).length))
+        : 0;
       const completedToday = cards.filter((item) =>
-        (item.history || []).some((entry) => entry?.date === dateText),
+        historyEntries(item).some((entry) => entry?.date === dateText),
       ).length;
       const recentReview = recentReviewStatus(cards, dateText);
       const masteredCount = activeCards.filter((item) => item.last_result === "pass").length;
@@ -333,7 +340,7 @@
       const selectedActiveCards = selectedCards.filter((item) => item.status !== "retired");
       const selectedDueCards = selectedActiveCards.filter((item) => String(item.next_due || "9999-12-31") <= dateText);
       const selectedCompletedToday = selectedCards.filter((item) =>
-        (item.history || []).some((entry) => entry?.date === dateText),
+        historyEntries(item).some((entry) => entry?.date === dateText),
       ).length;
       const selectedMasteredCount = selectedActiveCards.filter((item) => item.last_result === "pass").length;
       const selectedMasteryScore = selectedActiveCards.length
@@ -345,6 +352,7 @@
       return {
         ...clone(course),
         due_count: dueCards.length,
+        review_rounds: reviewRounds,
         completed_today: completedToday,
         ...recentReview,
         total_count: cards.length,
@@ -368,9 +376,10 @@
     });
 
     coursePayloads.sort((left, right) =>
-      Number(Boolean(left.reviewed_recently)) - Number(Boolean(right.reviewed_recently))
-      || Number(left.priority_mastery_score ?? left.mastery_score ?? 0) - Number(right.priority_mastery_score ?? right.mastery_score ?? 0)
+      Number(left.review_rounds || 0) - Number(right.review_rounds || 0)
+      || Number(Boolean(left.reviewed_recently)) - Number(Boolean(right.reviewed_recently))
       || Number(right.due_count || 0) - Number(left.due_count || 0)
+      || Number(left.priority_mastery_score ?? left.mastery_score ?? 0) - Number(right.priority_mastery_score ?? right.mastery_score ?? 0)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999)
       || String(left.title || "").localeCompare(String(right.title || "")),
     );

@@ -10,7 +10,7 @@ const state = {
   user: null,
   syncInProgress: false,
   syncTimer: null,
-  sortMode: "mastery",
+  sortMode: "rounds",
   expandedCourseId: "",
   selectedCourseId: "",
   sessionCards: [],
@@ -92,26 +92,31 @@ function recentReviewRank(course) {
   return Number(Boolean(course?.reviewed_recently));
 }
 
+function courseReviewRounds(course) {
+  return Number(course?.review_rounds ?? 0) || 0;
+}
+
 function sortCourses(courses) {
   const sorted = [...courses];
   if (state.sortMode === "due") {
     sorted.sort((left, right) =>
-      recentReviewRank(left) - recentReviewRank(right)
-      || Number(right.due_count || 0) - Number(left.due_count || 0)
+      Number(right.due_count || 0) - Number(left.due_count || 0)
+      || recentReviewRank(left) - recentReviewRank(right)
       || coursePriorityMastery(left) - coursePriorityMastery(right)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999),
     );
   } else if (state.sortMode === "original") {
     sorted.sort((left, right) =>
-      recentReviewRank(left) - recentReviewRank(right)
-      || Number(left.order ?? 9999) - Number(right.order ?? 9999)
+      Number(left.order ?? 9999) - Number(right.order ?? 9999)
+      || recentReviewRank(left) - recentReviewRank(right)
       || String(left.title || "").localeCompare(String(right.title || "")),
     );
   } else {
     sorted.sort((left, right) =>
-      recentReviewRank(left) - recentReviewRank(right)
-      || coursePriorityMastery(left) - coursePriorityMastery(right)
+      courseReviewRounds(left) - courseReviewRounds(right)
+      || recentReviewRank(left) - recentReviewRank(right)
       || Number(right.due_count || 0) - Number(left.due_count || 0)
+      || coursePriorityMastery(left) - coursePriorityMastery(right)
       || Number(left.order ?? 9999) - Number(right.order ?? 9999)
       || String(left.title || "").localeCompare(String(right.title || "")),
     );
@@ -287,7 +292,7 @@ function courseRow(course) {
         <span class="course-metrics" aria-label="Course stats">
           <span class="course-metric mastery-metric"><strong>${masteryScore.toFixed(0)}%</strong><span>${selectedCount > 0 ? "Core · " : ""}${escapeHtml(masteryLabel)}</span></span>
           <span class="course-metric"><strong>${Number(course.due_count || 0)}</strong><span>Due</span></span>
-          <span class="course-metric completed-metric"><strong>${Number(course.completed_today || 0)}</strong><span>Done today</span></span>
+          <span class="course-metric completed-metric"><strong>${courseReviewRounds(course)}</strong><span>Review rounds</span></span>
           <span class="course-metric"><strong>${Number(course.total_count || 0)}</strong><span>Sentences</span></span>
         </span>
         <span class="course-chevron" aria-hidden="true">⌄</span>
@@ -994,7 +999,7 @@ async function initialize() {
     refreshDashboard();
   });
   $("courseSortSelect").addEventListener("change", (event) => {
-    state.sortMode = event.target.value || "mastery";
+    state.sortMode = event.target.value || "rounds";
     renderDashboard();
   });
   $("mediaFileInput").addEventListener("change", renderSelectedFiles);

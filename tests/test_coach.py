@@ -108,6 +108,61 @@ class CoachTests(unittest.TestCase):
         self.assertEqual(result[0]["recent_reviewed_on"], "2026-07-11")
         self.assertEqual(result[0]["recent_reviewed_until"], "2026-07-13")
 
+    def test_group_cards_by_course_counts_completed_full_review_rounds(self):
+        course_store = load_course_store()
+        courses = [{"id": "rounds", "title": "复习轮次", "card_ids": ["first-card", "second-card", "retired-card"]}]
+        items = [
+            {
+                "id": "first-card",
+                "course_id": "rounds",
+                "item": "First card",
+                "status": "reviewing",
+                "history": [{"date": "2026-07-10"}, {"date": "2026-07-11"}],
+            },
+            {
+                "id": "second-card",
+                "course_id": "rounds",
+                "item": "Second card",
+                "status": "reviewing",
+                "history": [{"date": "2026-07-11"}],
+            },
+            {
+                "id": "retired-card",
+                "course_id": "rounds",
+                "item": "Retired card",
+                "status": "retired",
+                "history": [],
+            },
+        ]
+
+        result = course_store.group_cards_by_course(items, courses, dt.date(2026, 7, 11))
+
+        self.assertEqual(result[0]["review_rounds"], 1)
+
+    def test_group_cards_by_course_defaults_malformed_history_to_zero_review_rounds(self):
+        course_store = load_course_store()
+        courses = [{"id": "malformed", "title": "异常历史", "card_ids": ["string-history", "none-history"]}]
+        items = [
+            {
+                "id": "string-history",
+                "course_id": "malformed",
+                "item": "String history",
+                "status": "reviewing",
+                "history": "not-a-history-list",
+            },
+            {
+                "id": "none-history",
+                "course_id": "malformed",
+                "item": "None history",
+                "status": "reviewing",
+                "history": None,
+            },
+        ]
+
+        result = course_store.group_cards_by_course(items, courses, dt.date(2026, 7, 11))
+
+        self.assertEqual(result[0]["review_rounds"], 0)
+
     def test_group_cards_by_course_keeps_recent_review_marker_for_three_days(self):
         course_store = load_course_store()
         courses = [{"id": "recent", "title": "最近复习", "card_ids": ["card"]}]
@@ -1321,17 +1376,18 @@ The room is also really crowded, so we need to wait to see it.
                 courses_path=courses_path,
             )
 
-        self.assertEqual([course["id"] for course in payload["courses"]], ["louvre", "client-basics"])
-        self.assertEqual(payload["courses"][0]["mastery_score"], 0.0)
-        self.assertEqual(payload["courses"][0]["mastery_label"], "很不熟悉")
-        self.assertEqual(payload["courses"][1]["due_count"], 1)
-        self.assertEqual(payload["courses"][1]["today_cards"][0]["prompt_sentence"], "你好，感谢你参加会议。")
-        self.assertEqual(payload["courses"][0]["all_cards"][0]["target_sentence"], "The museum opens at nine.")
-        self.assertEqual(payload["courses"][0]["full_content"], payload["courses"][0]["all_cards"])
-        self.assertEqual(len(payload["courses"][0]["selected_content"]), 1)
-        self.assertEqual(payload["courses"][0]["selected_total_count"], 1)
+        self.assertEqual([course["id"] for course in payload["courses"]], ["client-basics", "louvre"])
+        courses_by_id = {course["id"]: course for course in payload["courses"]}
+        self.assertEqual(courses_by_id["louvre"]["mastery_score"], 0.0)
+        self.assertEqual(courses_by_id["louvre"]["mastery_label"], "很不熟悉")
+        self.assertEqual(courses_by_id["client-basics"]["due_count"], 1)
+        self.assertEqual(courses_by_id["client-basics"]["today_cards"][0]["prompt_sentence"], "你好，感谢你参加会议。")
+        self.assertEqual(courses_by_id["louvre"]["all_cards"][0]["target_sentence"], "The museum opens at nine.")
+        self.assertEqual(courses_by_id["louvre"]["full_content"], courses_by_id["louvre"]["all_cards"])
+        self.assertEqual(len(courses_by_id["louvre"]["selected_content"]), 1)
+        self.assertEqual(courses_by_id["louvre"]["selected_total_count"], 1)
 
-    def test_dashboard_sorts_least_familiar_then_due_count_and_manual_order(self):
+    def test_dashboard_sorts_fewest_review_rounds_then_due_count_and_manual_order(self):
         web_server = load_web_server()
         with tempfile.TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)
@@ -1356,10 +1412,10 @@ The room is also really crowded, so we need to wait to see it.
                 }
                 for card_id, course_id, next_due, status, result, interval, history in [
                     ("a", "manual-first", "2026-07-12", "new", "pending", 1, []),
-                    ("b", "more-due", "2026-07-11", "new", "pending", 1, []),
-                    ("c", "more-due", "2026-07-10", "new", "pending", 1, []),
+                    ("b", "more-due", "2026-07-11", "new", "pending", 1, [{"date": "2026-07-10"}]),
+                    ("c", "more-due", "2026-07-10", "new", "pending", 1, [{"date": "2026-07-10"}]),
                     ("d", "manual-second", "2026-07-12", "new", "pending", 1, []),
-                    ("e", "familiar", "2026-08-10", "reviewing", "pass", 30, [{"result": "pass"}]),
+                    ("e", "familiar", "2026-08-10", "reviewing", "pass", 30, [{"date": "2026-07-10", "result": "pass"}]),
                 ]
             ]
             state_path.write_text(json.dumps(cards, ensure_ascii=False), encoding="utf-8")
@@ -1375,7 +1431,7 @@ The room is also really crowded, so we need to wait to see it.
 
         self.assertEqual(
             [course["id"] for course in payload["courses"]],
-            ["more-due", "manual-first", "manual-second", "familiar"],
+            ["manual-first", "manual-second", "more-due", "familiar"],
         )
 
     def test_sync_state_validates_and_saves_with_timestamped_backups(self):
