@@ -43,9 +43,18 @@ test("course dashboard orders the least familiar course first", () => {
   assert.deepEqual(dashboard.courses[0].full_content, dashboard.courses[0].all_cards);
 });
 
-test("full-course review rounds order cloud courses before due cards", () => {
+test("full-content completion events determine review rounds independently of card grades", () => {
   const courses = [
-    { id: "reviewed-course", title: "Reviewed", order: 1, card_ids: ["reviewed-one", "reviewed-two"] },
+    {
+      id: "reviewed-course",
+      title: "Reviewed",
+      order: 1,
+      card_ids: ["reviewed-one", "reviewed-two"],
+      full_review_events: [
+        { id: "round-1", completed_on: "2026-07-10" },
+        { id: "round-2", completed_on: "2026-07-11" },
+      ],
+    },
     { id: "new-course", title: "New", order: 2, card_ids: ["new-one", "new-two"] },
   ];
   const reviewItems = [
@@ -91,7 +100,48 @@ test("full-course review rounds order cloud courses before due cards", () => {
 
   assert.deepEqual(dashboard.courses.map((course) => course.id), ["new-course", "reviewed-course"]);
   assert.equal(dashboard.courses[0].review_rounds, 0);
-  assert.equal(dashboard.courses[1].review_rounds, 1);
+  assert.equal(dashboard.courses[1].review_rounds, 2);
+});
+
+test("full-content completion is recorded once per event and survives workspace merging", () => {
+  const courses = [{ id: "course", title: "Course", card_ids: ["card"] }];
+  const completed = workspace.recordFullContentReview(
+    courses,
+    "course",
+    "2026-08-12",
+    "device-a-round-1",
+    "2026-08-12T10:00:00Z",
+  );
+  const repeated = workspace.recordFullContentReview(
+    completed,
+    "course",
+    "2026-08-12",
+    "device-a-round-1",
+    "2026-08-12T10:00:00Z",
+  );
+  const merged = workspace.mergeWorkspace(
+    { courses: repeated, review_items: [] },
+    {
+      courses: [{
+        id: "course",
+        title: "Course",
+        card_ids: ["card"],
+        full_review_events: [{
+          id: "device-b-round-1",
+          completed_on: "2026-08-12",
+          completed_at: "2026-08-12T10:01:00Z",
+        }],
+      }],
+      review_items: [],
+    },
+  );
+
+  assert.equal(repeated[0].full_review_events.length, 1);
+  assert.deepEqual(merged.courses[0].full_review_events.map((event) => event.id).sort(), [
+    "device-a-round-1",
+    "device-b-round-1",
+  ]);
+  assert.equal(workspace.dashboardFromWorkspace(merged.courses, [], "2026-08-12").courses[0].review_rounds, 2);
 });
 
 test("dashboard ignores malformed object histories", () => {
@@ -116,7 +166,14 @@ test("dashboard ignores malformed object histories", () => {
 
 test("recently reviewed courses remain marked for three days and move below new work", () => {
   const courses = [
-    { id: "recent", title: "Recent course", order: 1, card_ids: ["recent-card"], selected_card_ids: ["recent-card"] },
+    {
+      id: "recent",
+      title: "Recent course",
+      order: 1,
+      card_ids: ["recent-card"],
+      selected_card_ids: ["recent-card"],
+      full_review_events: [{ id: "round-1", completed_on: "2026-07-16" }],
+    },
     { id: "unreviewed", title: "Unreviewed course", order: 2, card_ids: ["unreviewed-card"], selected_card_ids: ["unreviewed-card"] },
   ];
   const reviewItems = [
@@ -423,4 +480,7 @@ test("page exposes account sync and mastery sorting controls", async () => {
   assert.match(script, /full_content/);
   assert.match(script, /Reviewed recently/);
   assert.match(script, /reviewed_recently/);
+  assert.match(script, /maybeRecordFullContentCompletion/);
+  assert.match(script, /fullReviewCompletionRecorded/);
+  assert.match(script, /fullReviewLastCardId/);
 });
