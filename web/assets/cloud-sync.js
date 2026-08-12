@@ -175,12 +175,22 @@
     if (error) throw new Error(error.message);
   }
 
+  async function saveCourse(userId, course) {
+    const activeClient = await initialize();
+    if (!activeClient) throw new Error("Cloud sync is not configured");
+    const { error } = await activeClient.from(COURSES_TABLE).upsert(courseRow(userId, course), {
+      onConflict: "user_id,course_id",
+    });
+    if (error) throw new Error(error.message);
+  }
+
   root.EnglishCoachCloud = {
     currentUser,
     initialize,
     isConfigured,
     onAuthStateChange,
     readWorkspace,
+    saveCourse,
     saveReviewItem,
     saveWorkspace,
     signIn,
