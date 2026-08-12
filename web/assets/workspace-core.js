@@ -76,6 +76,17 @@
     return Array.isArray(item?.history) ? item.history : [];
   }
 
+  function fullReviewEvents(course) {
+    const events = Array.isArray(course?.full_review_events) ? course.full_review_events : [];
+    const seen = new Set();
+    return events.filter((event) => {
+      const id = String(event?.id || "").trim();
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }
+
   function historyPassRatio(item) {
     const results = historyEntries(item)
       .map((entry) => String(entry?.result || "").trim().toLowerCase())
@@ -321,9 +332,7 @@
       const cards = [...(grouped.get(course.id) || [])].sort((a, b) => courseCardSort(course, a, b));
       const activeCards = cards.filter((item) => item.status !== "retired");
       const dueCards = activeCards.filter((item) => String(item.next_due || "9999-12-31") <= dateText);
-      const reviewRounds = activeCards.length
-        ? Math.min(...activeCards.map((item) => historyEntries(item).length))
-        : 0;
+      const reviewRounds = fullReviewEvents(course).length;
       const completedToday = cards.filter((item) =>
         historyEntries(item).some((entry) => entry?.date === dateText),
       ).length;
@@ -426,6 +435,29 @@
     return updated;
   }
 
+  function recordFullContentReview(courses, courseId, dateText, eventId, completedAt = new Date().toISOString()) {
+    const normalizedId = String(eventId || "").trim();
+    if (!normalizedId) throw new Error("A full-content review event id is required");
+    let found = false;
+    const updated = (courses || []).map((source) => {
+      if (source.id !== courseId) return clone(source);
+      found = true;
+      const course = clone(source);
+      const events = fullReviewEvents(course);
+      if (!events.some((event) => String(event.id) === normalizedId)) {
+        events.push({
+          id: normalizedId,
+          completed_on: String(dateText || ""),
+          completed_at: String(completedAt || ""),
+        });
+      }
+      course.full_review_events = events;
+      return course;
+    });
+    if (!found) throw new Error("Course was not found");
+    return updated;
+  }
+
   function eventKey(entry) {
     return [
       entry?.synced_at || "",
@@ -502,6 +534,16 @@
       if (DEFAULT_SELECTED_CARD_IDS[merged.id] && knownSelection.length) {
         merged.selected_card_ids = knownSelection;
       }
+    }
+    if (Object.hasOwn(localCourse, "full_review_events") || Object.hasOwn(remoteCourse, "full_review_events")) {
+      const eventsById = new Map();
+      for (const event of [...fullReviewEvents(localCourse), ...fullReviewEvents(remoteCourse)]) {
+        eventsById.set(String(event.id), clone(event));
+      }
+      merged.full_review_events = [...eventsById.values()].sort((left, right) =>
+        String(left.completed_at || left.completed_on || "").localeCompare(String(right.completed_at || right.completed_on || ""))
+        || String(left.id).localeCompare(String(right.id)),
+      );
     }
     return migrateKnownCourseSelection(merged);
   }
@@ -584,6 +626,7 @@
     mergeWorkspace,
     normalizeAnswer,
     recordReviewResult,
+    recordFullContentReview,
     reviewCard,
     workspaceFingerprint,
   };
