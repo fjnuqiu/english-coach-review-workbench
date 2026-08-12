@@ -17,6 +17,9 @@ const state = {
   sessionMode: "due",
   currentReviewIndex: 0,
   sessionInitialCount: 0,
+  fullReviewCompletionEventId: "",
+  fullReviewCompletionRecorded: false,
+  fullReviewLastCardId: "",
   translatedEnglish: "",
   reviewRecognition: null,
   reviewRecording: false,
@@ -51,6 +54,11 @@ function todayIso() {
     day: "2-digit",
   });
   return formatter.format(new Date());
+}
+
+function newFullReviewCompletionEventId() {
+  if (globalThis.crypto?.randomUUID) return globalThis.crypto.randomUUID();
+  return `full-review-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
 function escapeHtml(value) {
@@ -558,6 +566,11 @@ function startCourseReview(courseId, mode = "due") {
   state.sessionCards = [...(preferredCards || [])];
   state.currentReviewIndex = 0;
   state.sessionInitialCount = state.sessionCards.length;
+  state.fullReviewCompletionEventId = normalizedMode === "full" ? newFullReviewCompletionEventId() : "";
+  state.fullReviewCompletionRecorded = false;
+  state.fullReviewLastCardId = normalizedMode === "full"
+    ? String(state.sessionCards.at(-1)?.id || "")
+    : "";
   const presentation = bundledCoursePresentation(course);
   $("activeCourseTitle").textContent = presentation.title;
   $("activeCourseSummary").textContent = presentation.summary;
@@ -577,6 +590,9 @@ function closeCourseReview() {
   state.sessionCards = [];
   state.sessionMode = "due";
   state.currentReviewIndex = 0;
+  state.fullReviewCompletionEventId = "";
+  state.fullReviewCompletionRecorded = false;
+  state.fullReviewLastCardId = "";
   $("courseReviewWorkspace").hidden = true;
 }
 
@@ -616,6 +632,7 @@ function renderActiveCard() {
   $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
   $("previousReviewButton").disabled = state.currentReviewIndex <= 0;
   $("nextReviewButton").disabled = state.currentReviewIndex >= state.sessionCards.length - 1;
+  void maybeRecordFullContentCompletion();
 }
 
 function renderDiffTokens(tokens, highlighted, className) {
@@ -714,6 +731,51 @@ async function submitReviewResult(result) {
     if (state.localBackendAvailable === true) scheduleCloudSync();
   } catch (error) {
     showToast(`Could not save: ${error.message}`);
+  }
+}
+
+async function maybeRecordFullContentCompletion() {
+  if (
+    state.sessionMode !== "full"
+    || state.fullReviewCompletionRecorded
+    || !state.fullReviewLastCardId
+    || activeCard()?.id !== state.fullReviewLastCardId
+  ) return;
+
+  state.fullReviewCompletionRecorded = true;
+  const courseId = state.selectedCourseId;
+  const eventId = state.fullReviewCompletionEventId;
+  const completedAt = new Date().toISOString();
+  try {
+    if (state.localBackendAvailable === false) {
+      if (!state.user) throw new Error("Sign in to your account first");
+      state.cloudCourses = workspace.recordFullContentReview(
+        state.cloudCourses,
+        courseId,
+        selectedDate(),
+        eventId,
+        completedAt,
+      );
+      const course = state.cloudCourses.find((entry) => entry.id === courseId);
+      await cloud.saveCourse(state.user.id, course);
+    } else {
+      await apiJson("/api/full-course-review", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          course_id: courseId,
+          date: selectedDate(),
+          event_id: eventId,
+          completed_at: completedAt,
+        }),
+      });
+    }
+    showToast("Full course review recorded");
+    await refreshDashboard();
+    if (state.localBackendAvailable === true) scheduleCloudSync();
+  } catch (error) {
+    state.fullReviewCompletionRecorded = false;
+    showToast(`Could not record full-course review: ${error.message}`);
   }
 }
 
