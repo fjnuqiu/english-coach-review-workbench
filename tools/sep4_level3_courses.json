@@ -1,0 +1,416 @@
+{
+  "courses": [
+    {
+      "id_hint": "l3-graduation-plans-integrated",
+      "title": "Graduation Plans — Integrated",
+      "summary": "Discuss graduation, creative career plans, and practical advice for a food blog.",
+      "selected_content": [
+        "Graduation is around the corner. Do you have any plans for after?",
+        "You have a creative way of writing and a great sense of humor.",
+        "I will set up a blog later tonight.",
+        "I recently received an offer from a big corporation.",
+        "I'll start there and see what happens."
+      ],
+      "full_content": [
+        {"item":"I bet their bubble tea is awesome.","prompt":"我敢说他们的珍珠奶茶肯定很棒。"},
+        {"item":"I guess we'll just have to wait and see.","prompt":"我想我们只能等着看了。"},
+        {"item":"We've had so many unforgettable moments together.","prompt":"我们一起经历了那么多难忘的时刻。"},
+        {"item":"Graduation is around the corner. Do you have any plans for after?","prompt":"毕业就在眼前了。之后你有什么计划吗？"},
+        {"item":"You know, I'm a big foodie, and I've always enjoyed writing food reviews.","prompt":"你知道，我是个吃货，而且一直喜欢写美食评论。"},
+        {"item":"Maybe I should start there.","prompt":"也许我应该从这个方向开始。"},
+        {"item":"Do you have any advice?","prompt":"你有什么建议吗？"},
+        {"item":"You could send your reviews to some food magazines.","prompt":"你可以把评论寄给一些美食杂志。"},
+        {"item":"Or you could start a channel on YouTube.","prompt":"或者你可以在 YouTube 上开一个频道。"},
+        {"item":"A YouTube channel sounds cool, but I get super nervous in front of the camera.","prompt":"YouTube 频道听起来很酷，但我在镜头前会非常紧张。"},
+        {"item":"Oh wait, you should start a food blog!","prompt":"哦，等等，你应该开一个美食博客！"},
+        {"item":"You have a creative way of writing and a great sense of humor.","prompt":"你写作很有创意，而且很有幽默感。"},
+        {"item":"Those will get you a lot of fans.","prompt":"这些会让你收获很多粉丝。"},
+        {"item":"These are some great ideas.","prompt":"这些都是很棒的主意。"},
+        {"item":"I will set up a blog later tonight.","prompt":"我今晚晚些时候就会搭建一个博客。"},
+        {"item":"How about you? What's your plan after graduation?","prompt":"你呢？毕业后的计划是什么？"},
+        {"item":"I recently received an offer from a big corporation.","prompt":"我最近收到一家大公司的工作邀请。"},
+        {"item":"I'll start there and see what happens.","prompt":"我会从那里开始，看看会发生什么。"},
+        {"item":"I know you'll do great there.","prompt":"我知道你在那里会做得很好。"},
+        {"item":"bet","prompt":"确信；打赌说"},
+        {"item":"unforgettable","prompt":"难忘的"},
+        {"item":"around the corner","prompt":"即将来临；近在眼前"},
+        {"item":"creative","prompt":"有创意的"},
+        {"item":"a sense of humor","prompt":"幽默感"},
+        {"item":"corporation","prompt":"大公司；企业集团"}
+      ]
+    },
+    {
+      "id_hint": "l3-these-those-pronouns",
+      "title": "These & Those as Pronouns",
+      "summary": "Use these and those independently when referring to nearby and more distant plural things.",
+      "selected_content": [
+        "Hey, where did you get those?",
+        "These are for you, actually.",
+        "These are books that will help you with your creative writing.",
+        "Those are three famous food blogs that I bet you'll like."
+      ],
+      "full_content": [
+        {"item":"Hey, where did you get those?","prompt":"嘿，你从哪里得到那些的？"},
+        {"item":"At the library.","prompt":"在图书馆。"},
+        {"item":"These are for you, actually.","prompt":"其实这些是给你的。"},
+        {"item":"What? Really? What are they?","prompt":"什么？真的吗？它们是什么？"},
+        {"item":"These are books that will help you with your creative writing.","prompt":"这些书会帮助你进行创意写作。"},
+        {"item":"Also, check your WeChat.","prompt":"另外，看看你的微信。"},
+        {"item":"Hey, three new messages from you!","prompt":"嘿，你发来的三条新消息！"},
+        {"item":"Those are three famous food blogs that I bet you'll like.","prompt":"那些是三个著名的美食博客，我敢说你会喜欢。"},
+        {"item":"these","prompt":"这些（指较近的复数事物）"},
+        {"item":"those","prompt":"那些（指较远的复数事物）"}
+      ]
+    },
+    {
+      "id_hint": "l3-youtuber-vocabulary",
+      "title": "YouTuber & Reviews Vocabulary",
+      "summary": "Learn vocabulary for online creators, interests, reviews, and step-by-step guides.",
+      "selected_content": [
+        "I'm Neil, a popular gaming YouTuber.",
+        "A stakeholder is involved in something and can benefit from its success.",
+        "After experiencing something, you may talk about your feelings in a review.",
+        "A walk-through is a guide with detailed information about something."
+      ],
+      "full_content": [
+        {"item":"I'm Neil, a popular gaming YouTuber.","prompt":"我是 Neil，一名很受欢迎的游戏 YouTuber。"},
+        {"item":"A YouTuber shares videos on YouTube.","prompt":"YouTuber 在 YouTube 上分享视频。"},
+        {"item":"As a top YouTuber, she makes a new video every day.","prompt":"作为顶级 YouTuber，她每天制作一个新视频。"},
+        {"item":"A stakeholder is involved in something and can benefit from its success.","prompt":"stakeholder 是参与某事并可能从其成功中获益的人。"},
+        {"item":"A stakeholder of a product may speak in favor of it.","prompt":"产品的利益相关者可能会为它说好话。"},
+        {"item":"He pretends to be objective, but it turns out he is a stakeholder.","prompt":"他假装客观，但结果发现他是利益相关者。"},
+        {"item":"I mainly do game reviews and game walk-throughs.","prompt":"我主要做游戏评论和游戏攻略。"},
+        {"item":"After experiencing something, you may talk about your feelings in a review.","prompt":"体验过某事后，你可以在评论中谈谈感受。"},
+        {"item":"Many people wrote positive reviews about the phone.","prompt":"很多人给这部手机写了好评。"},
+        {"item":"A walk-through is a guide with detailed information about something.","prompt":"walk-through 是包含某事详细信息的指南。"},
+        {"item":"He found the game really difficult, so he turned to a game walk-through.","prompt":"他觉得游戏很难，所以求助于游戏攻略。"},
+        {"item":"YouTuber","prompt":"YouTube 视频创作者"},
+        {"item":"stakeholder","prompt":"利益相关者"},
+        {"item":"review","prompt":"评论；评测"},
+        {"item":"walk-through","prompt":"攻略；详细指南"}
+      ]
+    },
+    {
+      "id_hint": "l3-youtuber-experience-listening",
+      "title": "My YouTuber Experience — Listening",
+      "summary": "Follow a creator's experience of buying equipment, gaining followers, and changing content.",
+      "selected_content": [
+        "Being a YouTuber is a lot of fun, but it also isn't easy.",
+        "You have to buy a really good camera, microphone, and video software.",
+        "Also, getting followers takes time.",
+        "Then I realized that my followers didn't only want reviews.",
+        "They also wanted content that was fun.",
+        "Brands pay me to do product reviews. It's amazing."
+      ],
+      "full_content": [
+        {"item":"Today I want to talk about my experience as a YouTuber.","prompt":"今天我想谈谈我作为 YouTuber 的经历。"},
+        {"item":"Being a YouTuber is a lot of fun, but it also isn't easy.","prompt":"当 YouTuber 很有趣，但也不容易。"},
+        {"item":"These are some things I've learned.","prompt":"这些是我学到的一些事情。"},
+        {"item":"First of all, it can be expensive.","prompt":"首先，这可能很贵。"},
+        {"item":"You have to buy a really good camera, microphone, and video software.","prompt":"你必须买很好的相机、麦克风和视频软件。"},
+        {"item":"Also, getting followers takes time.","prompt":"而且，获得粉丝需要时间。"},
+        {"item":"When I started, I didn't get a lot of views. It was disappointing.","prompt":"刚开始时，我没有得到很多浏览量，这令人失望。"},
+        {"item":"Then I realized that my followers didn't only want reviews.","prompt":"后来我意识到，我的粉丝不只想看评论。"},
+        {"item":"They also wanted content that was fun.","prompt":"他们也想要有趣的内容。"},
+        {"item":"So I listened to them and changed my videos.","prompt":"所以我听取了他们的意见并改变了视频。"},
+        {"item":"Now I have over one million followers.","prompt":"现在我有超过一百万粉丝。"},
+        {"item":"Brands pay me to do product reviews. It's amazing.","prompt":"品牌付钱让我做产品评测，这太棒了。"},
+        {"item":"I still have to work hard. Otherwise, people may stop watching my channel.","prompt":"我仍必须努力工作，否则人们可能不再看我的频道。"}
+      ]
+    },
+    {
+      "id_hint": "l3-first-time-cooking-speaking",
+      "title": "Cooking for the First Time — Speaking",
+      "summary": "Talk about cooking videos, reducing sugar, a failed recipe, and ordering food.",
+      "selected_content": [
+        "No thanks, I'm trying to cut down on sugar.",
+        "In these videos, he recreates fancy dishes from films and TV shows.",
+        "I'm trying one of those easy recipes today. I bet it will be delicious.",
+        "It's raw inside and burnt outside.",
+        "Do you want to order in? Or, we can eat out."
+      ],
+      "full_content": [
+        {"item":"When will dinner be ready? I'm starving!","prompt":"晚饭什么时候好？我饿坏了！"},
+        {"item":"Do you want to snack on some cookies first?","prompt":"你想先吃点饼干当零食吗？"},
+        {"item":"No thanks, I'm trying to cut down on sugar.","prompt":"不了，谢谢，我正努力减少糖的摄入。"},
+        {"item":"Why are you suddenly interested in cooking? You've never cooked before.","prompt":"你怎么突然对烹饪感兴趣？你以前从没做过饭。"},
+        {"item":"I've been watching cooking videos by a YouTuber.","prompt":"我一直在看一位 YouTuber 的烹饪视频。"},
+        {"item":"In these videos, he recreates fancy dishes from films and TV shows.","prompt":"在这些视频里，他复刻电影和电视剧中的精致菜肴。"},
+        {"item":"That sounds creative and challenging.","prompt":"听起来很有创意也很有挑战。"},
+        {"item":"I'm trying one of those easy recipes today. I bet it will be delicious.","prompt":"今天我要试试其中一道简单食谱。我敢说会很好吃。"},
+        {"item":"Dinner is ready. Dig in!","prompt":"晚饭好了，开吃吧！"},
+        {"item":"It's not bad.","prompt":"还不错。"},
+        {"item":"It's raw inside and burnt outside.","prompt":"里面是生的，外面却烤焦了。"},
+        {"item":"No worries. This is your first time cooking.","prompt":"没关系，这是你第一次做饭。"},
+        {"item":"Do you want to order in? Or, we can eat out.","prompt":"你想叫外卖吗？或者我们可以出去吃。"},
+        {"item":"cut down on","prompt":"减少；削减"},
+        {"item":"dig in","prompt":"开吃；开始大快朵颐"},
+        {"item":"order in","prompt":"叫外卖"},
+        {"item":"eat out","prompt":"外出就餐"}
+      ]
+    },
+    {
+      "id_hint": "l3-taking-pet-to-vet-integrated",
+      "title": "Taking a Pet to the Vet — Integrated",
+      "summary": "Follow Buddy's first vet check-up and learn useful language for animal care and health.",
+      "selected_content": [
+        "He's here for his first check-up.",
+        "Buddy's teeth are discolored.",
+        "I recommend that he have a cleaning sometime soon.",
+        "The shots can protect Buddy against several different diseases.",
+        "The assistant will be in shortly to give Buddy his shots.",
+        "To rescue means to save someone from something bad or dangerous."
+      ],
+      "full_content": [
+        {"item":"Hi! I'm Dr. Thompson.","prompt":"你好！我是 Thompson 医生。"},
+        {"item":"And this is my dog, Buddy.","prompt":"这是我的狗 Buddy。"},
+        {"item":"What brings you in today?","prompt":"今天是什么原因让你来这里？"},
+        {"item":"I just got Buddy from a bulldog rescue group.","prompt":"我刚从斗牛犬救助组织领养了 Buddy。"},
+        {"item":"He's here for his first check-up.","prompt":"他来做第一次体检。"},
+        {"item":"Can you lift Buddy onto the exam table?","prompt":"你能把 Buddy 抱到检查台上吗？"},
+        {"item":"The first thing I'm going to do is listen to Buddy's heart.","prompt":"我要做的第一件事是听 Buddy 的心脏。"},
+        {"item":"You are a very good boy, Buddy.","prompt":"Buddy，你真是个好孩子。"},
+        {"item":"Next, I'm going to look at Buddy's teeth.","prompt":"接下来我要看看 Buddy 的牙齿。"},
+        {"item":"Buddy's teeth are discolored.","prompt":"Buddy 的牙齿变色了。"},
+        {"item":"I recommend that he have a cleaning sometime soon.","prompt":"我建议他不久后做一次清洁。"},
+        {"item":"Is that why there are small, yellow spots on his teeth?","prompt":"这就是他牙齿上有小黄斑的原因吗？"},
+        {"item":"The assistant will use a special brush to scrub away those spots.","prompt":"助手会用特制刷子刷掉那些斑点。"},
+        {"item":"Does Buddy need any shots today?","prompt":"Buddy 今天需要打针吗？"},
+        {"item":"The shots can protect Buddy against several different diseases.","prompt":"这些针可以保护 Buddy 免受几种不同疾病侵害。"},
+        {"item":"Will the shots hurt Buddy?","prompt":"打针会弄疼 Buddy 吗？"},
+        {"item":"It happens very quickly.","prompt":"过程会很快。"},
+        {"item":"It is important to keep Buddy healthy.","prompt":"保持 Buddy 健康很重要。"},
+        {"item":"The assistant will be in shortly to give Buddy his shots.","prompt":"助手很快会进来给 Buddy 打针。"},
+        {"item":"To rescue means to save someone from something bad or dangerous.","prompt":"rescue 的意思是把人从糟糕或危险的事物中救出来。"},
+        {"item":"To protect means to try to keep people or things safe.","prompt":"protect 的意思是努力让人或物保持安全。"},
+        {"item":"The doctor gave him a shot of vaccine.","prompt":"医生给他打了一针疫苗。"},
+        {"item":"When you have a disease, you are sick.","prompt":"当你得了 disease 时，你生病了。"},
+        {"item":"The doctor recommends that I get more exercise.","prompt":"医生建议我多锻炼。"},
+        {"item":"I'll be there shortly.","prompt":"我很快就会到那里。"},
+        {"item":"rescue","prompt":"救援；营救"},
+        {"item":"protect","prompt":"保护"},
+        {"item":"a shot","prompt":"一针；注射"},
+        {"item":"disease","prompt":"疾病"},
+        {"item":"recommend","prompt":"建议；推荐"},
+        {"item":"shortly","prompt":"很快；不久"}
+      ]
+    },
+    {
+      "id_hint": "l3-emphatic-components",
+      "title": "Emphasis & Strong Feelings",
+      "summary": "Use repetition and intensifiers to express surprise, concern, and strong feelings naturally.",
+      "selected_content": [
+        "Really serious!",
+        "What? Are you serious?",
+        "I'm so afraid of snakes, they make me cry.",
+        "I really really hope he can stop talking."
+      ],
+      "full_content": [
+        {"item":"Really serious!","prompt":"非常严重！"},
+        {"item":"What? Are you serious?","prompt":"什么？你是认真的吗？"},
+        {"item":"I'm so afraid of snakes, they make me cry.","prompt":"我非常害怕蛇，它们会让我哭。"},
+        {"item":"I really really like parrots!","prompt":"我真的真的很喜欢鹦鹉！"},
+        {"item":"I really really hope he can stop talking.","prompt":"我真的真的希望他能停止说话。"},
+        {"item":"Your apartment is really really lovely.","prompt":"你的公寓真的真的很可爱。"},
+        {"item":"Your parrot is really really cute.","prompt":"你的鹦鹉真的真的很可爱。"},
+        {"item":"so","prompt":"如此；这么（用于加强语气）"},
+        {"item":"really really","prompt":"真的非常；用重复加强语气"}
+      ]
+    },
+    {
+      "id_hint": "l3-pet-illness-vocabulary",
+      "title": "Pet Illnesses",
+      "summary": "Describe a pet's symptoms, energy level, fever, and a medical examination.",
+      "selected_content": [
+        "My dog has an illness.",
+        "My dog has a fever.",
+        "Buddy coughs a lot at night.",
+        "Buddy needs to be examined by a vet."
+      ],
+      "full_content": [
+        {"item":"My dog has an illness.","prompt":"我的狗得病了。"},
+        {"item":"If someone has an illness, it means he or she is not in good health.","prompt":"如果某人有 illness，意味着他或她身体不健康。"},
+        {"item":"My dog has a fever.","prompt":"我的狗发烧了。"},
+        {"item":"A fever is an illness in which you have a very high temperature.","prompt":"fever 是体温很高的一种病症。"},
+        {"item":"Buddy coughs a lot at night.","prompt":"Buddy 晚上咳得很厉害。"},
+        {"item":"You have been coughing a lot this morning.","prompt":"你今天早上咳得很多。"},
+        {"item":"Buddy doesn't have much energy recently.","prompt":"Buddy 最近没什么精力。"},
+        {"item":"Energy allows you to do activities.","prompt":"精力让你能够进行活动。"},
+        {"item":"Taking care of a pet takes a lot of energy.","prompt":"照顾宠物需要很多精力。"},
+        {"item":"Buddy needs to be examined by a vet.","prompt":"Buddy 需要由兽医检查。"},
+        {"item":"To examine means to check or study carefully.","prompt":"examine 的意思是仔细检查或研究。"},
+        {"item":"I'm going to the hospital tomorrow to have my knee examined.","prompt":"我明天要去医院检查膝盖。"},
+        {"item":"illness","prompt":"疾病；病"},
+        {"item":"fever","prompt":"发烧；热度"},
+        {"item":"cough","prompt":"咳嗽"},
+        {"item":"energy","prompt":"精力；能量"},
+        {"item":"examine","prompt":"检查；仔细查看"}
+      ]
+    },
+    {
+      "id_hint": "l3-make-let",
+      "title": "Make & Let",
+      "summary": "Use make and let to describe causes, feelings, and permission in pet conversations.",
+      "selected_content": [
+        "Dogs are cute but they make me sneeze.",
+        "I'm so afraid of snakes, they make me cry!",
+        "Really? They make me happy.",
+        "Try to let him out of his cage more often."
+      ],
+      "full_content": [
+        {"item":"Let me guess! You got a puppy, right?","prompt":"让我猜猜！你养了一只小狗，对吗？"},
+        {"item":"Dogs are cute but they make me sneeze.","prompt":"狗很可爱，但它们会让我打喷嚏。"},
+        {"item":"I got a snake! It's really pretty and easy to take care of.","prompt":"我养了一条蛇！它很漂亮，也很容易照顾。"},
+        {"item":"I'm so afraid of snakes, they make me cry!","prompt":"我非常怕蛇，它们会让我哭！"},
+        {"item":"Really? They make me happy.","prompt":"真的吗？它们让我开心。"},
+        {"item":"You can come visit my house and I'll show it to you.","prompt":"你可以来我家看看，我会把它给你看。"},
+        {"item":"Try to let him out of his cage more often.","prompt":"试着让他更常从笼子里出来。"},
+        {"item":"Maybe then he'll behave better.","prompt":"也许那样他会表现得更好。"},
+        {"item":"make somebody do something","prompt":"使某人做某事；让某人产生某种感受"},
+        {"item":"let somebody do something","prompt":"允许某人做某事"}
+      ]
+    },
+    {
+      "id_hint": "l3-pet-hospital-vocabulary",
+      "title": "Pet Hospital Vocabulary",
+      "summary": "Learn words for injuries, operations, flu, and veterinary advice.",
+      "selected_content": [
+        "Did your dog get injured?",
+        "Your dog may need an operation.",
+        "Your dog just got the flu.",
+        "Please note that your dog needs a lot of rest."
+      ],
+      "full_content": [
+        {"item":"Did your dog get injured?","prompt":"你的狗受伤了吗？"},
+        {"item":"To injure somebody is to hurt somebody.","prompt":"injure somebody 的意思是伤害某人。"},
+        {"item":"He was badly injured in the accident.","prompt":"他在事故中受了重伤。"},
+        {"item":"Your dog may need an operation.","prompt":"你的狗可能需要做手术。"},
+        {"item":"Doctors do operations to repair body parts.","prompt":"医生做手术来修复身体部位。"},
+        {"item":"He's going to have an operation on his knee next week.","prompt":"他下周要做膝盖手术。"},
+        {"item":"Don't worry. I've done this operation hundreds of times.","prompt":"别担心。我已经做过数百次这种手术。"},
+        {"item":"Your dog just got the flu.","prompt":"你的狗刚得了流感。"},
+        {"item":"Flu is a common illness that can make you cough and have to clear your nose a lot.","prompt":"流感是一种常见病，会让你咳嗽、经常需要清理鼻子。"},
+        {"item":"Please note that your dog needs a lot of rest.","prompt":"请注意，你的狗需要充分休息。"},
+        {"item":"Please note that the meeting will begin on time. Don't be late.","prompt":"请注意，会议会准时开始。不要迟到。"},
+        {"item":"injure","prompt":"使受伤"},
+        {"item":"operation","prompt":"手术"},
+        {"item":"flu","prompt":"流感"},
+        {"item":"note","prompt":"注意；留意"}
+      ]
+    },
+    {
+      "id_hint": "l3-pet-behavior-vocabulary",
+      "title": "Pet Behavior",
+      "summary": "Describe pet behavior, anxiety, messiness, and fetching something.",
+      "selected_content": [
+        "My dog started behaving strangely these days.",
+        "My dog doesn't behave himself when guests visit my house.",
+        "My dog behaves badly towards guests because he gets anxious around strangers.",
+        "Could you fetch me a clean towel?"
+      ],
+      "full_content": [
+        {"item":"My dog started behaving strangely these days.","prompt":"这些天我的狗开始表现得很奇怪。"},
+        {"item":"To behave means to act in a certain way.","prompt":"behave 的意思是以某种方式行动。"},
+        {"item":"To behave oneself means to act politely and correctly.","prompt":"behave oneself 的意思是举止礼貌得体。"},
+        {"item":"My dog doesn't behave himself when guests visit my house.","prompt":"客人来我家时，我的狗表现不好。"},
+        {"item":"My dog behaves badly towards guests because he gets anxious around strangers.","prompt":"我的狗对客人表现不好，可能因为他在陌生人身边会焦虑。"},
+        {"item":"Being anxious means being worried and nervous.","prompt":"anxious 的意思是担心和紧张。"},
+        {"item":"He seems anxious about the exam.","prompt":"他似乎对考试感到焦虑。"},
+        {"item":"My dog behaved anxiously. He jumped around and made my house really messy.","prompt":"我的狗焦虑地表现着。他跳来跳去，把家里弄得很乱。"},
+        {"item":"If something is messy, it's not tidy.","prompt":"如果某物 messy，说明它不整洁。"},
+        {"item":"Could you fetch me a clean towel?","prompt":"你能给我取一条干净毛巾吗？"},
+        {"item":"To fetch means to go to another place to get somebody or something and bring them back.","prompt":"fetch 的意思是去另一个地方取来某人或某物。"},
+        {"item":"behave","prompt":"表现；举止"},
+        {"item":"anxious","prompt":"焦虑的；不安的"},
+        {"item":"messy","prompt":"凌乱的"},
+        {"item":"fetch","prompt":"取来；去拿"}
+      ]
+    },
+    {
+      "id_hint": "l3-cat-or-dog-listening",
+      "title": "Cat Person or Dog Person? — Listening",
+      "summary": "Compare cat people and dog people through personality, preference, and social behavior.",
+      "selected_content": [
+        "A cat person is someone who prefers cats over dogs.",
+        "A dog person is someone who prefers dogs over cats.",
+        "Cat people may be more introverted, or quiet and private.",
+        "Dog people are more extroverted, or talkative and easygoing.",
+        "Dog people are more agreeable, loving, and sociable than cat people."
+      ],
+      "full_content": [
+        {"item":"Are you a cat person or a dog person?","prompt":"你是爱猫的人还是爱狗的人？"},
+        {"item":"A cat person is someone who prefers cats over dogs.","prompt":"cat person 是更喜欢猫而不是狗的人。"},
+        {"item":"A dog person is someone who prefers dogs over cats.","prompt":"dog person 是更喜欢狗而不是猫的人。"},
+        {"item":"Your very quiet neighbor who owns four cats is definitely a cat person.","prompt":"你那位养了四只猫、非常安静的邻居肯定是爱猫的人。"},
+        {"item":"The easygoing professor whose golden retriever goes with him everywhere is a dog person.","prompt":"那位金毛跟着他到处走、性格随和的教授是爱狗的人。"},
+        {"item":"Several studies suggest that there are big differences between cat people and dog people.","prompt":"多项研究表明，爱猫的人和爱狗的人有很大差异。"},
+        {"item":"Cat people may be more introverted, or quiet and private.","prompt":"爱猫的人可能更内向，也就是安静且私密。"},
+        {"item":"Dog people are more extroverted, or talkative and easygoing.","prompt":"爱狗的人更外向，也就是健谈且随和。"},
+        {"item":"Cat people are thought to be more open-minded, creative, and artistic than dog people.","prompt":"人们认为爱猫的人比爱狗的人更开放、更有创意和艺术感。"},
+        {"item":"Dog people are more agreeable, loving, and sociable than cat people.","prompt":"爱狗的人比爱猫的人更随和、更有爱、更善交际。"},
+        {"item":"golden retriever","prompt":"金毛寻回犬"},
+        {"item":"talkative","prompt":"健谈的"},
+        {"item":"sociable","prompt":"善于交际的"}
+      ]
+    },
+    {
+      "id_hint": "l3-seeing-the-vet-speaking",
+      "title": "Seeing the Vet — Speaking",
+      "summary": "Practice a vet visit about a noisy parrot, health concerns, anxiety, and practical advice.",
+      "selected_content": [
+        "My parrot has a really serious problem.",
+        "My job is to protect animals, not to train them.",
+        "Maybe he talks because he's anxious.",
+        "Try to let him out of his cage more often.",
+        "Maybe then he'll behave better."
+      ],
+      "full_content": [
+        {"item":"Hi Brandon, how can I help you today?","prompt":"你好 Brandon，今天我能怎么帮助你？"},
+        {"item":"My parrot has a really serious problem.","prompt":"我的鹦鹉有一个非常严重的问题。"},
+        {"item":"What is it? Does he have an illness?","prompt":"是什么？他生病了吗？"},
+        {"item":"No, he won't stop talking!","prompt":"没有，他不停地说话！"},
+        {"item":"That's not a disease.","prompt":"那不是疾病。"},
+        {"item":"I can't sleep because he talks all night long.","prompt":"我没法睡觉，因为他整晚说话。"},
+        {"item":"He bothers my roommate too.","prompt":"他也打扰我的室友。"},
+        {"item":"Is there a shot you can give him? Or an operation you can do?","prompt":"你能给他打一针吗？或者能做个手术吗？"},
+        {"item":"My job is to protect animals, not to train them.","prompt":"我的工作是保护动物，而不是训练它们。"},
+        {"item":"What do you recommend I do?","prompt":"你建议我怎么做？"},
+        {"item":"I'm not a professional parrot trainer.","prompt":"我不是专业鹦鹉训练师。"},
+        {"item":"Maybe he talks because he's anxious.","prompt":"也许他一直说话是因为焦虑。"},
+        {"item":"Try to let him out of his cage more often.","prompt":"试着更常让他从笼子里出来。"},
+        {"item":"Maybe then he'll behave better.","prompt":"那样他可能会表现更好。"},
+        {"item":"That's not a bad idea. I'll try it tonight.","prompt":"这不是个坏主意。今晚我就试试。"},
+        {"item":"Don't forget to pay your bill at the front desk.","prompt":"别忘了在前台付账单。"}
+      ]
+    },
+    {
+      "id_hint": "l3-attending-a-party-speaking",
+      "title": "Attending a Party — Speaking",
+      "summary": "Make small talk at a party and use repetition to show warmth, admiration, and concern.",
+      "selected_content": [
+        "I guess I came too early.",
+        "Your apartment is really really lovely.",
+        "I really really like parrots!",
+        "I really really hope he can stop talking.",
+        "You guys should give him more attention."
+      ],
+      "full_content": [
+        {"item":"Jane and Brandon invited me to the party tonight. Where's everyone?","prompt":"Jane 和 Brandon 今晚邀请我参加聚会。大家都在哪里？"},
+        {"item":"They just went out to buy some snacks.","prompt":"他们刚出去买些零食。"},
+        {"item":"Come in please.","prompt":"请进。"},
+        {"item":"I guess I came too early.","prompt":"我想我来得太早了。"},
+        {"item":"Your apartment is really really lovely.","prompt":"你的公寓真的真的很可爱。"},
+        {"item":"The weather has been nice.","prompt":"最近天气很好。"},
+        {"item":"Oh, you have a parrot!","prompt":"哦，你有一只鹦鹉！"},
+        {"item":"That's Brandon's parrot. Do you like parrots?","prompt":"那是 Brandon 的鹦鹉。你喜欢鹦鹉吗？"},
+        {"item":"I really really like parrots!","prompt":"我真的真的很喜欢鹦鹉！"},
+        {"item":"I really really hope he can stop talking.","prompt":"我真的真的希望他能停止说话。"},
+        {"item":"Brandon and I even planned to give him a shot.","prompt":"Brandon 和我甚至计划给他打一针。"},
+        {"item":"The vet said he was just anxious.","prompt":"兽医说他只是焦虑。"},
+        {"item":"How could you do this? He's a very cute parrot!","prompt":"你们怎么能这样做？他是一只非常可爱的鹦鹉！"},
+        {"item":"You guys should give him more attention.","prompt":"你们应该多关注他。"},
+        {"item":"Good idea!","prompt":"好主意！"}
+      ]
+    }
+  ]
+}
