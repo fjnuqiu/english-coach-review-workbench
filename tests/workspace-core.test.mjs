@@ -283,10 +283,10 @@ test("bundled video courses initialize an empty cloud account without learner pr
     "2026-07-16",
   );
 
-  assert.equal(seeded.courses.length, 32);
-  assert.equal(seeded.review_items.length, 578);
-  assert.equal(dashboard.courses.reduce((sum, course) => sum + course.total_count, 0), 578);
-  assert.equal(dashboard.courses.reduce((sum, course) => sum + course.selected_total_count, 0), 146);
+  assert.equal(seeded.courses.length, 39);
+  assert.equal(seeded.review_items.length, 671);
+  assert.equal(dashboard.courses.reduce((sum, course) => sum + course.total_count, 0), 671);
+  assert.equal(dashboard.courses.reduce((sum, course) => sum + course.selected_total_count, 0), 186);
   assert.ok(seeded.review_items.every((item) => item.status === "new"));
   assert.ok(seeded.review_items.every((item) => item.last_result === "pending"));
   assert.ok(seeded.review_items.every((item) => item.history.length === 0));
@@ -302,6 +302,8 @@ test("bundled video courses initialize an empty cloud account without learner pr
   assert.ok(seeded.courses.some((course) => course.id === "talking-about-a-date"));
   assert.ok(seeded.courses.some((course) => course.id === "l3-graduation-plans-integrated"));
   assert.ok(seeded.courses.some((course) => course.id === "l3-taking-pet-to-vet-integrated"));
+  assert.ok(seeded.courses.some((course) => course.id === "notes-apologies-and-work"));
+  assert.ok(seeded.courses.some((course) => course.id === "notes-advice-and-grammar"));
 });
 
 test("bundled video courses keep existing account progress and add only missing content", () => {
@@ -328,13 +330,13 @@ test("bundled video courses keep existing account progress and add only missing 
   const course = seeded.courses.find((item) => item.id === "pet-food-safety");
   const item = seeded.review_items.find((entry) => entry.id === "are-you-a-pet-owner");
 
-  assert.equal(seeded.courses.length, 32);
+  assert.equal(seeded.courses.length, 39);
   assert.equal(course.title, "我的宠物饮食课");
   assert.equal(course.card_ids.length, 10);
   assert.equal(course.selected_card_ids.length, 6);
   assert.equal(item.last_result, "pass");
   assert.equal(item.history.length, 1);
-  assert.equal(seeded.review_items.length, 578);
+  assert.equal(seeded.review_items.length, 671);
 });
 
 test("cloud review result follows the same interval ladder as the local coach", () => {

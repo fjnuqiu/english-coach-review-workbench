@@ -1,0 +1,207 @@
+{
+  "courses": [
+    {
+      "id_hint": "notes-apologies-and-work",
+      "title": "Apologies, Company & Work",
+      "summary": "Apologize for limited time, describe shared work pressure, and talk about important family moments.",
+      "source_files": ["English review notes"],
+      "selected_content": [
+        "I’m really sorry I can’t be with you more often.",
+        "We’re both busy with work.",
+        "I’ve missed many important moments in your life, too.",
+        "I try my best not to miss important moments in my daughter’s life.",
+        "I’m really sorry for not being able to spend more time with you."
+      ],
+      "full_content": [
+        {"item":"I’m really sorry I can’t be with you more often.","prompt":"很抱歉我不能经常陪着你。"},
+        {"item":"I’m really sorry for not being able to spend more time with you.","prompt":"很抱歉没能花更多时间陪你。"},
+        {"item":"We’re both busy with work.","prompt":"我们俩工作都很忙。"},
+        {"item":"Both of us are busy with our work.","prompt":"我们两个人都忙于各自的工作。"},
+        {"item":"I’ve missed many important moments in your life, too.","prompt":"我也错过了你人生中许多重要的时刻。"},
+        {"item":"I try my best not to miss important moments in my daughter’s life.","prompt":"我尽力不错过女儿人生中的重要时刻。"},
+        {"item":"accompany somebody","prompt":"陪伴某人；accompany 后直接接人，不加 with。"},
+        {"item":"be with somebody","prompt":"陪伴某人；日常口语的自然说法。"},
+        {"item":"spend time with somebody","prompt":"花时间陪某人。"},
+        {"item":"try one’s best (not) to do something","prompt":"尽全力（不）做某事。"}
+      ]
+    },
+    {
+      "id_hint": "notes-feelings-and-choices",
+      "title": "Feelings, Fame & Life Choices",
+      "summary": "Talk about emotions, work conversations, guilt, obstacles, and choosing a calmer life.",
+      "source_files": ["English review notes"],
+      "selected_content": [
+        "When we were at the office the other day, you said you felt tired.",
+        "I didn’t know you felt this way.",
+        "Being famous also makes things difficult for me.",
+        "Sometimes I prefer a normal life to a crazy life.",
+        "If you feel guilty, it may be because you think you have done something wrong.",
+        "Maybe something is wrong."
+      ],
+      "full_content": [
+        {"item":"When we were at the office the other day, you said you felt tired.","prompt":"前几天我们在办公室时，你说你觉得累。"},
+        {"item":"I didn’t know you felt this way.","prompt":"我之前不知道你有这种感受。"},
+        {"item":"Being famous also makes things difficult for me.","prompt":"出名也让我的处境变得困难。"},
+        {"item":"Sometimes I prefer a normal life to a crazy life.","prompt":"有时比起疯狂热闹的生活，我更喜欢普通的生活。"},
+        {"item":"If you feel guilty, it may be because you think you have done something wrong.","prompt":"如果你感到愧疚，可能是因为你觉得自己做错了什么。"},
+        {"item":"Maybe something is wrong.","prompt":"也许哪里出问题了。"},
+        {"item":"There may be something wrong.","prompt":"可能出了什么问题。"},
+        {"item":"I feel guilty about forgetting her birthday.","prompt":"我为忘记她的生日感到内疚。"},
+        {"item":"Don’t let work get in the way of family life.","prompt":"别让工作妨碍家庭生活。"},
+        {"item":"The crisis is around the corner.","prompt":"危机即将来临。"},
+        {"item":"Don’t bring up that topic.","prompt":"不要提起那个话题。"},
+        {"item":"prefer A to B","prompt":"比起 B，更喜欢 A。"}
+      ]
+    },
+    {
+      "id_hint": "notes-time-and-relationships",
+      "title": "Time, Leaving & Relationships",
+      "summary": "Use sleep and departure expressions, distinguish past tenses, and discuss a past relationship naturally.",
+      "source_files": ["English review notes"],
+      "selected_content": [
+        "When I was asleep last night, I had a dream.",
+        "My partner had already left when I arrived.",
+        "I’m satisfied that he told me almost all the details of his work before he left the company.",
+        "We broke up about a year ago.",
+        "I want to know whether she’s seeing anyone."
+      ],
+      "full_content": [
+        {"item":"When I was asleep last night, I had a dream.","prompt":"昨晚睡着的时候，我做了一个梦。"},
+        {"item":"When I went to bed last night, I had a dream.","prompt":"昨晚上床睡觉时，我做了一个梦。"},
+        {"item":"My partner had already left when I arrived.","prompt":"我到的时候，我的搭档已经离开了。"},
+        {"item":"My partner has left.","prompt":"我的搭档已经离开了（对现在有影响）。"},
+        {"item":"My partner left.","prompt":"我的搭档离开了（叙述过去事实）。"},
+        {"item":"I’m satisfied that he told me almost all the details of his work before he left the company.","prompt":"我满意的是，他在离开公司前告诉了我几乎所有工作细节。"},
+        {"item":"We broke up about a year ago.","prompt":"我们大约一年前分手了。"},
+        {"item":"I want to know whether she’s seeing anyone.","prompt":"我想知道她现在有没有在和谁交往。"},
+        {"item":"be asleep","prompt":"处于睡着的状态。"},
+        {"item":"go to bed","prompt":"上床睡觉（动作）。"},
+        {"item":"break up","prompt":"分手；过去式是 broke up。"},
+        {"item":"be seeing anyone","prompt":"在感情语境中：正在和谁交往。"}
+      ]
+    },
+    {
+      "id_hint": "notes-veterinary-dental-care",
+      "title": "Veterinary Dental Care",
+      "summary": "Handle a pet’s first dental checkup, describe yellow spots, and make practical cleaning recommendations.",
+      "source_files": ["English review notes"],
+      "selected_content": [
+        "He came here for his first veterinary checkup.",
+        "I’m going to check Buddy’s teeth.",
+        "Buddy’s teeth are a little yellow.",
+        "Does this cause small yellow spots on his teeth?",
+        "The assistant will clean the spots with a special brush.",
+        "The vet advised us to brush his teeth daily."
+      ],
+      "full_content": [
+        {"item":"He came here for his first veterinary checkup.","prompt":"他来这里做第一次兽医检查。"},
+        {"item":"He came here for his first wellness exam.","prompt":"他来这里做第一次健康检查。"},
+        {"item":"I’m going to check Buddy’s teeth.","prompt":"我要检查 Buddy 的牙齿。"},
+        {"item":"Buddy’s teeth are a little yellow.","prompt":"Buddy 的牙齿有一点黄。"},
+        {"item":"Does this cause small yellow spots on his teeth?","prompt":"这会在他的牙齿上造成小黄斑吗？"},
+        {"item":"The assistant will clean the spots with a special brush.","prompt":"助手会用专门的刷子清理这些斑点。"},
+        {"item":"I recommend brushing the pet’s teeth daily.","prompt":"我建议每天给宠物刷牙。"},
+        {"item":"I suggest that you clean the spots.","prompt":"我建议你清理这些斑点。"},
+        {"item":"The vet advised us to brush his teeth daily.","prompt":"兽医建议我们每天给他刷牙。"},
+        {"item":"tooth → teeth","prompt":"tooth 的复数是 teeth。"},
+        {"item":"with a brush","prompt":"用刷子（工具用 with）。"},
+        {"item":"by hand","prompt":"手工地；方式用 by。"}
+      ]
+    },
+    {
+      "id_hint": "notes-everyday-reminders",
+      "title": "Everyday Reminders & Directions",
+      "summary": "Use natural reminders for a messy home, volume, waiting, exhaustion, study routines, and directions.",
+      "source_files": ["English review notes"],
+      "selected_content": [
+        "The house is always messy and dirty, with too many things lying around.",
+        "Keep an eye on your daughter.",
+        "Keep your voice down. The kid is sleeping.",
+        "Please speak up. I can’t hear you clearly.",
+        "We’ll just have to wait and see.",
+        "It takes time to learn about French customers."
+      ],
+      "full_content": [
+        {"item":"The house is always messy and dirty, with too many things lying around.","prompt":"家里总是又乱又脏，到处堆着太多东西。"},
+        {"item":"Keep an eye on your daughter.","prompt":"看好你的女儿。"},
+        {"item":"Keep your voice down. The kid is sleeping.","prompt":"小声一点，孩子在睡觉。"},
+        {"item":"Please speak up. I can’t hear you clearly.","prompt":"请大声一点，我听不清。"},
+        {"item":"We’ll just have to wait and see.","prompt":"我们只能等等看。"},
+        {"item":"Who’s outside?","prompt":"谁在外面？"},
+        {"item":"I’m exhausted.","prompt":"我累坏了。"},
+        {"item":"I’m dying.","prompt":"我快受不了了／我快累死了。"},
+        {"item":"It takes time to learn about French customers.","prompt":"了解法国客户需要时间。"},
+        {"item":"I take a live online class every night.","prompt":"我每天晚上上一节直播网课。"},
+        {"item":"Turn onto Maishan Road.","prompt":"转入麦山路。"},
+        {"item":"look after somebody","prompt":"长期或日常照料某人。"},
+        {"item":"keep an eye on somebody or something","prompt":"临时照看、留意某人或某物。"}
+      ]
+    },
+    {
+      "id_hint": "notes-useful-vocabulary",
+      "title": "Useful Words & Easily Confused Terms",
+      "summary": "Distinguish common words and phrases for obstacles, attention, money, customization, travel, and daily life.",
+      "source_files": ["English review notes"],
+      "selected_content": [
+        "Your bag is in the way.",
+        "Pay attention to driving.",
+        "They want to make money from the project.",
+        "We went through customs.",
+        "Please pass me a pair of chopsticks.",
+        "I’m running out of patience."
+      ],
+      "full_content": [
+        {"item":"Your bag is in the way.","prompt":"你的包挡路了。"},
+        {"item":"Pay attention to driving.","prompt":"开车时要注意。"},
+        {"item":"They want to make money from the project.","prompt":"他们想从这个项目中赚钱。"},
+        {"item":"He earns money by working overtime.","prompt":"他靠加班挣钱。"},
+        {"item":"Lift the box carefully.","prompt":"小心地抬起这个箱子。"},
+        {"item":"This is a custom order.","prompt":"这是一个定制订单。"},
+        {"item":"We went through customs.","prompt":"我们通过了海关。"},
+        {"item":"You can customize this setting.","prompt":"你可以自定义这个设置。"},
+        {"item":"I watched the movie trailer.","prompt":"我看了这部电影的预告片。"},
+        {"item":"Please pass me a pair of chopsticks.","prompt":"请递给我一双筷子。"},
+        {"item":"I’m running out of patience.","prompt":"我的耐心快耗尽了。"},
+        {"item":"My room is messy.","prompt":"我的房间很乱。"},
+        {"item":"There are brown spots on the tooth.","prompt":"牙齿上有褐色斑点。"},
+        {"item":"get in the way of something","prompt":"妨碍某事；成为阻碍。"},
+        {"item":"make money","prompt":"赚钱；最通用的表达。"},
+        {"item":"earn money","prompt":"靠劳动或工作挣得钱。"},
+        {"item":"customs","prompt":"海关。"},
+        {"item":"customize","prompt":"自定义；定制。"}
+      ]
+    },
+    {
+      "id_hint": "notes-advice-and-grammar",
+      "title": "Advice Structures & Grammar Check",
+      "summary": "Give recommendations accurately and check high-impact patterns for number, auxiliaries, possession, word order, and tense.",
+      "source_files": ["English review notes"],
+      "selected_content": [
+        "I recommend brushing the pet’s teeth daily.",
+        "I recommend that he brush his teeth daily.",
+        "I suggest cleaning the spots.",
+        "Can you give me some advice?",
+        "Does this cause small yellow spots on his teeth?",
+        "Something is wrong."
+      ],
+      "full_content": [
+        {"item":"I recommend brushing the pet’s teeth daily.","prompt":"我建议每天给宠物刷牙。"},
+        {"item":"I recommend that he brush his teeth daily.","prompt":"我建议他每天刷牙。"},
+        {"item":"I suggest cleaning the spots.","prompt":"我建议清理这些斑点。"},
+        {"item":"I suggest that you clean the spots.","prompt":"我建议你清理这些斑点。"},
+        {"item":"Can you give me some advice?","prompt":"你能给我一些建议吗？"},
+        {"item":"The vet advised us to brush his teeth daily.","prompt":"兽医建议我们每天给他刷牙。"},
+        {"item":"Does this cause small yellow spots on his teeth?","prompt":"这会在他的牙齿上造成小黄斑吗？"},
+        {"item":"Something is wrong.","prompt":"出问题了。"},
+        {"item":"My daughter’s life","prompt":"我女儿的人生；注意所有格 ’s。"},
+        {"item":"There is something wrong.","prompt":"有问题；something 作单数。"},
+        {"item":"something wrong","prompt":"有问题的某事；形容词放在不定代词后。"},
+        {"item":"Being famous makes things difficult for me.","prompt":"出名让我的处境变得困难；动名词短语作单数主语。"},
+        {"item":"had left when I arrived","prompt":"过去完成时要有另一过去时间点作参照。"},
+        {"item":"Does + base verb","prompt":"Does 后接动词原形。"},
+        {"item":"advice is uncountable","prompt":"advice 是不可数名词；不说 an advice 或 advices。"},
+        {"item":"advise somebody to do something","prompt":"建议某人做某事。"}
+      ]
+    }
+  ]
+}

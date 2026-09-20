@@ -26,6 +26,7 @@ const videoCourseIds = [
 
 const externalCourseManifestPaths = [
   resolve(projectRoot, "tools/sep4_level3_courses.json"),
+  resolve(projectRoot, "tools/sep20_review_notes_courses.json"),
 ];
 
 const englishCourseMetadata = Object.freeze({
@@ -207,7 +208,7 @@ for (const manifest of externalManifests) {
       id: courseId,
       title: sourceCourse.title,
       summary_zh: sourceCourse.summary,
-      source_files: ["Video course"],
+      source_files: sourceCourse.source_files || ["Video course"],
       card_ids: cardIds,
       order: highestExistingOrder + externalCourses.length + 1,
       selected_card_ids: selectedCardIds,
