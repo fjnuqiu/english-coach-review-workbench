@@ -140,7 +140,7 @@
       next_due: item?.next_due || "",
       source: item?.source || "",
       ...(item?.type === "vocabulary" ? {
-        type: "vocabulary", meaning: item.meaning, usage: item.usage,
+        type: "vocabulary", kind: item.kind, meaning: item.meaning, usage: item.usage,
         example_zh: item.example_zh, source_courses: clone(item.source_courses || []),
       } : {}),
     };
@@ -281,6 +281,13 @@
       || Number(right.coreCorrect) - Number(left.coreCorrect)
       || right.coverage - left.coverage,
     )[0] || compareAgainstTarget(answer, "", keywords);
+  }
+
+  function compareVocabularyAnswer(answer, target, keywords = [], acceptedAnswers = []) {
+    const result = compareReviewAnswer(answer, target, keywords, acceptedAnswers);
+    // A matching root is insufficient for a standalone entry: career-minded is
+    // not career, and omitting "a" changes the meaning of a few / a little.
+    return { ...result, coreCorrect: result.exact };
   }
 
   function selectedCardIds(course) {
@@ -624,6 +631,7 @@
     answerTokens,
     cardMasteryScore,
     compareReviewAnswer,
+    compareVocabularyAnswer,
     dashboardFromWorkspace,
     masteryLabel,
     mergeSeedWorkspace,

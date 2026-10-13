@@ -1821,6 +1821,7 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
             "/assets/workspace-core.js", "/assets/cloud-sync.js",
             "/assets/video-course-seed.js", "/assets/vocabulary-guides.js",
             "/assets/vocabulary-core.js",
+            "/assets/doubao-vocabulary-seed.js",
         }:
             asset_path = WEB_DIR / "assets" / Path(parsed.path).name
             self.send_text(

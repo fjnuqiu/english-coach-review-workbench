@@ -589,15 +589,19 @@ function updateVocabularyLibrary(value) {
   state.vocabularyWorkspace = vocabulary.withLibrary(value);
   const items = vocabulary.entries(state.vocabularyWorkspace);
   $("vocabularyNavCount").textContent = String(items.length);
-  const sources = new Map(items.flatMap(item => item.source_courses || []).map(c => [c.course_id, c.title]));
+  const sourceInfo = new Map(items.flatMap(item => item.source_courses || []).map(c => [c.course_id, c]));
+  const sources = new Map([...sourceInfo].map(([id, source]) => [id, source.title]));
+  const courseCount = [...sourceInfo.values()].filter(source => source.source_type !== "notes").length;
+  const noteCount = [...sourceInfo.values()].filter(source => source.source_type === "notes").length;
   const previous = $("vocabularySource").value;
-  $("vocabularySource").innerHTML = '<option value="all">全部课程</option>'
+  $("vocabularySource").innerHTML = '<option value="all">全部来源</option>'
+    + (noteCount ? '<option value="notes:doubao:all">豆包汇总（全部）</option>' : "")
     + [...sources].map(([id, title]) => `<option value="${escapeHtml(id)}">${escapeHtml(title)}</option>`).join("");
-  $("vocabularySource").value = sources.has(previous) ? previous : "all";
-  $("vocabularySummary").textContent = `${items.length} 个表达 · 来自 ${sources.size} 门课程`;
+  $("vocabularySource").value = sources.has(previous) || (noteCount && previous === "notes:doubao:all") ? previous : "all";
+  $("vocabularySummary").textContent = `${items.length} 个表达 · ${courseCount} 门课程${noteCount ? ` + ${noteCount} 个笔记主题` : ""}`;
   $("vocabularyNotice").textContent = state.user || state.localBackendAvailable === true
-    ? "相同表达已合并，来源课程保留。词库的复习进度单独记录。"
-    : "当前展示内置课程词库。登录后会汇总你的其他课程，并同步词库复习进度。";
+    ? "相同表达已合并，来源课程和笔记主题保留。词库的复习进度单独记录。"
+    : "当前展示内置课程和豆包学习汇总。登录后会纳入你的其他课程，并同步词库复习进度。";
   renderVocabulary();
 }
 
@@ -616,14 +620,17 @@ function vocabularyTeachingHtml(item) {
 
 function renderVocabulary() {
   const items = filteredVocabulary();
+  const visibleItems = items.slice(0, state.vocabularyLimit);
+  const openIds = new Set([...document.querySelectorAll("#vocabularyList details[open]")].map(entry => entry.dataset.vocabEntry));
+  const retainOpen = visibleItems.some(item => openIds.has(item.id));
   const due = items.filter(item => item.next_due <= selectedDate()).length;
   $("vocabularyResultCount").textContent = `找到 ${items.length} 个表达 · ${due} 个待复习`;
   $("vocabularyPracticeButton").disabled = !items.length;
   $("vocabularyDueButton").disabled = !due;
   $("vocabularyMoreButton").hidden = items.length <= state.vocabularyLimit;
-  $("vocabularyList").innerHTML = items.slice(0, state.vocabularyLimit).map((item, index) => `
-    <details class="vocabulary-entry"${index === 0 ? " open" : ""}>
-      <summary><strong lang="en">${escapeHtml(item.item)}</strong><span class="vocabulary-kind">${item.kind === "word" ? "单词" : "短语"}</span></summary>
+  $("vocabularyList").innerHTML = visibleItems.map((item, index) => `
+    <details class="vocabulary-entry" data-vocab-entry="${escapeHtml(item.id)}"${(retainOpen ? openIds.has(item.id) : index === 0) ? " open" : ""}>
+      <summary><div class="vocabulary-term"><strong lang="en">${escapeHtml(item.item)}</strong>${item.pronunciation ? `<span class="vocabulary-pronunciation">${escapeHtml(item.pronunciation)}</span>` : ""}</div><span class="vocabulary-kind">${({ word: "单词", phrase: "短语", expression: "表达/句型" })[item.kind] || "表达"}</span></summary>
       <div class="vocabulary-entry-body">${vocabularyTeachingHtml(item)}
         <div class="vocabulary-entry-footer"><p class="vocabulary-source">来源：${(item.source_courses || []).map(c => escapeHtml(c.title)).join(" · ")}</p>
           <div class="action-row"><button class="button quiet" type="button" data-vocab-action="speak" data-vocab-id="${escapeHtml(item.id)}" aria-label="播放 ${escapeHtml(item.item)} 发音">▶ 发音</button>
@@ -780,7 +787,7 @@ function renderActiveCard() {
   resetCardFeedback();
   const isVocabulary = state.sessionKind === "vocabulary";
   $("reviewPromptLabel").textContent = isVocabulary ? "释义 · 回忆对应的英文表达" : "Chinese prompt";
-  $("answerInput").placeholder = isVocabulary ? "输入对应的单词或短语，再查看用法和例句。" : "Type your English, or record yourself saying the full sentence.";
+  $("answerInput").placeholder = isVocabulary ? "输入对应的单词、短语或句子，再查看用法和例句。" : "Type your English, or record yourself saying the full sentence.";
   $("vocabularyExplanation").hidden = true;
   $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
   $("previousReviewButton").disabled = state.currentReviewIndex <= 0;
@@ -821,7 +828,9 @@ function checkReviewAnswer() {
     return;
   }
   const target = card.target_sentence || card.answer;
-  const comparison = workspace.compareReviewAnswer(
+  const compare = state.sessionKind === "vocabulary" && card.kind !== "expression"
+    ? workspace.compareVocabularyAnswer : workspace.compareReviewAnswer;
+  const comparison = compare(
     answer,
     target,
     card.keywords || [],
@@ -831,7 +840,9 @@ function checkReviewAnswer() {
   $("diffPanel").hidden = false;
   $("targetDiffText").innerHTML = renderDiffTokens(comparison.targetTokens, comparison.missing, "token-missing");
   $("answerDiffText").innerHTML = renderDiffTokens(comparison.answerTokens, comparison.extra, "token-extra");
-  $("coreCoverage").textContent = `Match ${comparison.coverage}%`;
+  $("coreCoverage").textContent = state.sessionKind === "vocabulary" && card.kind !== "expression"
+    ? (comparison.exact ? "词条匹配" : "检查词条拼写和完整结构")
+    : `Match ${comparison.coverage}%`;
   if (comparison.exact) {
     $("reviewFeedback").textContent = "Accurate expression. You can mark it as Got it.";
     $("reviewFeedback").className = "feedback good";

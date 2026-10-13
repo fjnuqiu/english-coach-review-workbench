@@ -103,8 +103,8 @@
       </div>
       <div class="vocabulary-toolbar">
         <label class="vocabulary-search"><span>搜索表达或中文意思</span><input id="vocabularySearch" type="search" placeholder="例如 look forward to、期待" oninput="filterVocabulary()"></label>
-        <label class="sort-field"><span>类型</span><select id="vocabularyKind" aria-label="类型" onchange="filterVocabulary()"><option value="all">全部表达</option><option value="word">单词</option><option value="phrase">短语与表达</option></select></label>
-        <label class="sort-field"><span>来源课程</span><select id="vocabularySource" aria-label="来源课程" onchange="filterVocabulary()"><option value="all">全部课程</option></select></label>
+        <label class="sort-field"><span>类型</span><select id="vocabularyKind" aria-label="类型" onchange="filterVocabulary()"><option value="all">全部表达</option><option value="word">单词</option><option value="phrase">短语</option><option value="expression">表达与句型</option></select></label>
+        <label class="sort-field"><span>来源</span><select id="vocabularySource" aria-label="来源" onchange="filterVocabulary()"><option value="all">全部来源</option></select></label>
         <label class="due-filter"><input id="vocabularyDueOnly" type="checkbox" onchange="filterVocabulary()">只看待复习</label>
       </div>
       <div class="vocabulary-actions"><p id="vocabularyResultCount" role="status"></p><div class="action-row">
@@ -279,6 +279,7 @@
   <script src="/assets/workspace-core.js"></script>
   <script src="/assets/video-course-seed.js"></script>
   <script src="/assets/vocabulary-guides.js"></script>
+  <script src="/assets/doubao-vocabulary-seed.js"></script>
   <script src="/assets/vocabulary-core.js"></script>
   <script src="/assets/cloud-sync.js"></script>
   <script src="/assets/app.js"></script>

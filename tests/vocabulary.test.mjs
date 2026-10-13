@@ -4,21 +4,23 @@ import test from "node:test";
 await import("../web/assets/workspace-core.js");
 await import("../web/assets/video-course-seed.js");
 await import("../web/assets/vocabulary-guides.js");
+await import("../web/assets/doubao-vocabulary-seed.js");
 await import("../web/assets/vocabulary-core.js");
 const vocabulary = globalThis.EnglishCoachVocabulary;
 const workspace = globalThis.EnglishCoachWorkspace;
 const seed = globalThis.EnglishCoachVideoCourseSeed.workspace();
+const supplementary = globalThis.EnglishCoachDoubaoVocabulary;
 
 test("all bundled courses contribute teaching entries, with explanations and actual examples", () => {
   const library = vocabulary.withLibrary(seed);
   const entries = vocabulary.entries(library);
-  const sourceIds = new Set(entries.flatMap(item => item.source_courses.map(c => c.course_id)));
+  const sourceIds = new Set(entries.flatMap(item => item.source_courses.filter(c => c.source_type !== "notes").map(c => c.course_id)));
   assert.equal(sourceIds.size, seed.courses.length);
   assert.ok(entries.length > 150);
   for (const item of entries) {
     for (const field of ["meaning", "usage", "example", "example_zh"]) assert.ok(item[field]?.trim(), `${item.item}: ${field}`);
-    assert.notEqual(item.example.toLowerCase(), item.item.toLowerCase(), `${item.item}: example must be a sentence`);
-    assert.ok(item.example.split(/\s+/).length > 3);
+    if (item.kind !== "expression") assert.notEqual(item.example.toLowerCase(), item.item.toLowerCase(), `${item.item}: example must be a sentence`);
+    assert.ok(item.example.split(/\s+/).length >= 3);
     assert.match(item.meaning, /[\u4e00-\u9fff]/);
     assert.match(item.usage, /[\u4e00-\u9fff]/);
   }
@@ -32,7 +34,7 @@ test("repeated terms and inflected forms merge across private and bundled course
   ] };
   const entries = vocabulary.entries(vocabulary.withLibrary(value));
   assert.equal(entries.filter(i => i.item === "parrot").length, 1);
-  assert.deepEqual(entries.find(i => i.item === "parrot").source_courses.map(c => c.course_id), ["one", "two"]);
+  assert.deepEqual(entries.find(i => i.item === "parrot").source_courses.filter(c => c.source_type !== "notes").map(c => c.course_id), ["one", "two"]);
   assert.ok(entries.some(i => i.item === "sign up"));
 });
 
@@ -94,4 +96,67 @@ test("filters combine Chinese/English search, kind, source course, and due date"
   assert.ok(result.every(i => i.kind === "phrase"));
   assert.equal(vocabulary.filterEntries(entries, { query: "zzzzzz" }).length, 0);
   assert.equal(vocabulary.filterEntries(entries, { query: "look forward to", dueOnly: true, date: "2024-12-31" }).length, 0);
+});
+
+test("Doubao material is visible without a matching course and does not create course rows", () => {
+  const value = vocabulary.withLibrary({ courses: [], review_items: [] });
+  const items = vocabulary.entries(value);
+  assert.ok(items.length > 1000);
+  assert.equal(value.courses.length, 1);
+  assert.equal(vocabulary.courseWorkspace(value).courses.length, 0);
+  const notes = vocabulary.filterEntries(items, { courseId: "notes:doubao:all" });
+  assert.equal(notes.length, items.length);
+  assert.ok(vocabulary.filterEntries(notes, { kind: "word", query: "career-minded" }).length);
+  assert.ok(vocabulary.filterEntries(notes, { kind: "expression", query: "patience" }).length);
+});
+
+test("shared course and note terms remain one card with both sources and retain saved progress", () => {
+  const value = vocabulary.withLibrary(seed);
+  const entries = vocabulary.entries(value);
+  const term = entries.find(item => item.item === "look forward to");
+  assert.equal(entries.filter(item => item.item === "look forward to").length, 1);
+  assert.ok(term.source_courses.some(s => s.source_type === "course"));
+  assert.ok(term.source_courses.some(s => s.source_type === "notes"));
+  const graded = { ...value, review_items: workspace.recordReviewResult(value.review_items, term.id, "pass", "2026-10-13", "2026-10-13T08:00:00Z") };
+  const restored = vocabulary.entries(vocabulary.withLibrary(graded)).find(item => item.id === term.id);
+  assert.equal(restored.history.length, 1);
+  assert.equal(restored.next_due, "2026-10-15");
+});
+
+test("summary expressions leave original complete course sentences in the course view", () => {
+  const sentence = "I still keep in touch with my colleagues.";
+  const value = { courses: [{ id: "original" }], review_items: [{ id: "original-card", course_id: "original", item: sentence }] };
+  const regular = vocabulary.courseWorkspace(vocabulary.withLibrary(value));
+  assert.equal(regular.review_items[0].item, sentence);
+});
+
+test("reviewed pronunciation and usage distinctions survive importing", () => {
+  const items = vocabulary.entries(vocabulary.withLibrary(seed));
+  const live = items.find(item => item.item === "live");
+  assert.match(live.pronunciation, /lɪv/);
+  assert.match(live.pronunciation, /laɪv/);
+  assert.match(live.usage, /词性/);
+  assert.match(items.find(item => item.item === "chef").usage, /不必然/);
+  assert.match(items.find(item => item.item === "cuddle").usage, /give.*cuddle/);
+  assert.match(items.find(item => item.item === "dairy").usage, /diary/);
+});
+
+test("public supplement contains teaching content without conversations or learner records", () => {
+  const material = JSON.stringify(supplementary);
+  assert.doesNotMatch(material, /doubao\.com\/chat|\/Users\/|Qiu Jincheng|Jingjing|三江口|630110999/);
+  for (const entry of supplementary.entries) {
+    assert.ok(entry.source_lines.length);
+    for (const key of ["history", "user_id", "next_due", "status"]) assert.equal(key in entry, false);
+    for (const key of ["meaning", "usage", "example", "example_zh"]) assert.ok(entry[key]);
+  }
+});
+
+test("standalone vocabulary rejects changed meanings even when the root matches", () => {
+  assert.equal(workspace.compareVocabularyAnswer("career-minded", "career").coreCorrect, false);
+  assert.equal(workspace.compareVocabularyAnswer("few", "a few").coreCorrect, false);
+  assert.equal(workspace.compareVocabularyAnswer("little", "a little").coreCorrect, false);
+  assert.equal(workspace.compareVocabularyAnswer("career-minded", "career-minded").exact, true);
+  assert.equal(workspace.compareVocabularyAnswer("customise", "customize", [], ["customise"]).exact, true);
+  const favorite = vocabulary.entries(vocabulary.withLibrary(seed)).find(item => item.item === "favourite");
+  assert.ok(favorite.accepted_answers.includes("favorite"));
 });

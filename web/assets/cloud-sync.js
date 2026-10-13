@@ -76,22 +76,34 @@
     return () => data.subscription.unsubscribe();
   }
 
+  async function readAllRows(activeClient, table, fields, userId, orderFields) {
+    const pageSize = 500;
+    const rows = [];
+    for (let offset = 0; ; offset += pageSize) {
+      let query = activeClient.from(table).select(fields).eq("user_id", userId);
+      for (const field of orderFields) query = query.order(field, { ascending: true });
+      const { data, error } = await query.range(offset, offset + pageSize - 1);
+      if (error) throw new Error(error.message);
+      const batch = data || [];
+      rows.push(...batch);
+      if (batch.length < pageSize) return rows;
+    }
+  }
+
   async function readWorkspace(userId) {
     const activeClient = await initialize();
     if (!activeClient) throw new Error("Cloud sync is not configured");
-    const [coursesResult, cardsResult] = await Promise.all([
-      activeClient.from(COURSES_TABLE).select("course_id,payload,updated_at").eq("user_id", userId),
-      activeClient.from(CARDS_TABLE).select("course_id,card_id,payload,updated_at").eq("user_id", userId),
+    const [courses, cards] = await Promise.all([
+      readAllRows(activeClient, COURSES_TABLE, "course_id,payload,updated_at", userId, ["course_id"]),
+      readAllRows(activeClient, CARDS_TABLE, "course_id,card_id,payload,updated_at", userId, ["course_id", "card_id"]),
     ]);
-    if (coursesResult.error) throw new Error(coursesResult.error.message);
-    if (cardsResult.error) throw new Error(cardsResult.error.message);
     return {
-      courses: (coursesResult.data || []).map((row) => ({
+      courses: courses.map((row) => ({
         ...(row.payload || {}),
         id: row.payload?.id || row.course_id,
         cloud_updated_at: row.updated_at,
       })),
-      review_items: (cardsResult.data || []).map((row) => ({
+      review_items: cards.map((row) => ({
         ...(row.payload || {}),
         id: row.payload?.id || row.card_id,
         course_id: row.payload?.course_id || row.course_id,
