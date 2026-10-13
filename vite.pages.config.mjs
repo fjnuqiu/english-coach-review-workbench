@@ -1,4 +1,5 @@
-import { cp, mkdir } from "node:fs/promises";
+import { cp, mkdir, readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -20,9 +21,18 @@ function browserRuntimeConfig() {
     name: "english-coach-browser-runtime-config",
     transformIndexHtml: {
       order: "pre",
-      handler(html) {
+      async handler(html) {
+        let servedHtml = html.replaceAll('src="/assets/', `src="${pagesBase}assets/`);
+        // Classic scripts are copied as-is. Version their URLs together with the
+        // HTML so an older cached app cannot be paired with the new vocabulary UI.
+        for (const match of html.matchAll(/src="\/assets\/([\w.-]+\.js)"/g)) {
+          const source = await readFile(resolve(webRoot, "assets", match[1]));
+          const version = createHash("sha256").update(source).digest("hex").slice(0, 12);
+          const url = `${pagesBase}assets/${match[1]}`;
+          servedHtml = servedHtml.replaceAll(`src="${url}"`, `src="${url}?v=${version}"`);
+        }
         return {
-          html: html.replaceAll('src="/assets/', `src="${pagesBase}assets/`),
+          html: servedHtml,
           tags: [
             {
               tag: "script",

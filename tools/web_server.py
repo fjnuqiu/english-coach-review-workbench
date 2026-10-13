@@ -1817,7 +1817,11 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                 "application/javascript; charset=utf-8",
             )
             return
-        if parsed.path in {"/assets/workspace-core.js", "/assets/cloud-sync.js"}:
+        if parsed.path in {
+            "/assets/workspace-core.js", "/assets/cloud-sync.js",
+            "/assets/video-course-seed.js", "/assets/vocabulary-guides.js",
+            "/assets/vocabulary-core.js",
+        }:
             asset_path = WEB_DIR / "assets" / Path(parsed.path).name
             self.send_text(
                 asset_path.read_text(encoding="utf-8"),

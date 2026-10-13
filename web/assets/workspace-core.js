@@ -130,7 +130,7 @@
       prompt,
       prompt_sentence: prompt,
       answer: item?.item || "",
-      target_sentence: item?.example || item?.item || "",
+      target_sentence: item?.type === "vocabulary" ? item.item : (item?.example || item?.item || ""),
       example: item?.example || "",
       accepted_answers: Array.isArray(item?.accepted_answers) ? clone(item.accepted_answers) : [],
       note: item?.note || "",
@@ -139,6 +139,10 @@
       last_result: item?.last_result || "",
       next_due: item?.next_due || "",
       source: item?.source || "",
+      ...(item?.type === "vocabulary" ? {
+        type: "vocabulary", meaning: item.meaning, usage: item.usage,
+        example_zh: item.example_zh, source_courses: clone(item.source_courses || []),
+      } : {}),
     };
   }
 

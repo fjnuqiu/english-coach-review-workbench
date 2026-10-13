@@ -28,11 +28,19 @@ const state = {
   chineseRecording: false,
   chineseTranscriptBase: "",
   pollTimer: null,
+  workspaceView: "courses",
+  vocabularyWorkspace: null,
+  localWorkspace: null,
+  vocabularyLimit: 20,
+  sessionKind: "course",
+  reviewSaving: false,
+  reviewGeneration: 0,
 };
 
 const $ = (id) => document.getElementById(id);
 const workspace = window.EnglishCoachWorkspace;
 const cloud = window.EnglishCoachCloud;
+const vocabulary = window.EnglishCoachVocabulary;
 
 function bundledVideoCourseSeed() {
   const seed = window.EnglishCoachVideoCourseSeed;
@@ -147,18 +155,22 @@ function selectedDate() {
 async function refreshDashboard() {
   setConnectionStatus(state.user ? "Syncing" : "Checking");
   if (hasCloudWorkspace() && state.localBackendAvailable === false) {
-    state.dashboard = workspace.dashboardFromWorkspace(
-      state.cloudCourses,
-      state.cloudReviewItems,
-      selectedDate(),
-    );
+    const value = { courses: state.cloudCourses, review_items: state.cloudReviewItems };
+    updateVocabularyLibrary(value);
+    state.dashboard = courseDashboard(value);
     setConnectionStatus("Cloud synced");
     renderDashboard();
     return;
   }
   try {
     state.dashboard = await apiJson(`/api/dashboard?date=${encodeURIComponent(selectedDate())}`);
+    if (!Array.isArray(state.dashboard?.courses)) throw new Error("Local workspace is unavailable");
     state.localBackendAvailable = true;
+    const localValue = await readLocalWorkspace();
+    if (!Array.isArray(localValue?.courses) || !Array.isArray(localValue?.review_items)) throw new Error("Local workspace is unavailable");
+    state.localWorkspace = vocabulary.withLibrary(localValue);
+    updateVocabularyLibrary(state.localWorkspace);
+    state.dashboard = courseDashboard(state.localWorkspace);
     setConnectionStatus(state.user ? "Local + cloud" : "Local connected");
     configureLocalOnlyTools();
     renderDashboard();
@@ -166,11 +178,9 @@ async function refreshDashboard() {
     state.localBackendAvailable = false;
     configureLocalOnlyTools();
     if (hasCloudWorkspace()) {
-      state.dashboard = workspace.dashboardFromWorkspace(
-        state.cloudCourses,
-        state.cloudReviewItems,
-        selectedDate(),
-      );
+      const value = { courses: state.cloudCourses, review_items: state.cloudReviewItems };
+      updateVocabularyLibrary(value);
+      state.dashboard = courseDashboard(value);
       setConnectionStatus("Cloud synced");
       renderDashboard();
       return;
@@ -179,6 +189,7 @@ async function refreshDashboard() {
     $("courseList").innerHTML = state.cloudConfigured
       ? '<div class="empty-state"><strong>Sign in to see your courses</strong><p>Use “Sign in to sync” in the top-right corner to load your learning content on this device.</p></div>'
       : `<div class="empty-state">Could not load courses: ${escapeHtml(error.message)}</div>`;
+    if (!state.user) updateVocabularyLibrary(bundledVideoCourseSeed());
   }
 }
 
@@ -239,6 +250,11 @@ function courseCardsForMode(course, mode) {
 }
 
 function reviewModeMeta(mode) {
+  if (mode === "vocabulary") return {
+    label: "WORDS & PHRASES", description: "先回忆英文表达，再查看释义、用法与例句。此分组单独记录掌握程度。",
+    completeLabel: "本组表达复习完成", emptyTitle: "本组表达复习完成",
+    emptyDescription: "根据刚才记录的掌握程度安排下次复习。可以返回词库继续学习其他表达。",
+  };
   const normalizedMode = normalizeReviewMode(mode);
   if (normalizedMode === "selected") {
     return {
@@ -372,7 +388,7 @@ function renderAccountState() {
   if (signedIn) {
     $("signedInEmail").textContent = state.user.email || "Signed-in account";
     $("accountSyncSummary").textContent = state.cloudReady
-      ? `Synced ${state.cloudCourses.length} courses · ${state.cloudReviewItems.length} review items`
+      ? `Synced ${state.cloudCourses.filter(c => c.id !== vocabulary.GROUP_ID).length} courses · ${state.cloudReviewItems.filter(i => i.course_id !== vocabulary.GROUP_ID).length} course items · ${state.cloudReviewItems.filter(i => i.course_id === vocabulary.GROUP_ID).length} words & phrases`
       : "Preparing sync";
   }
   if (!state.cloudConfigured) {
@@ -437,10 +453,10 @@ async function synchronizeWorkspace({ silent = false } = {}) {
     ]);
     const remote = stripCloudMetadata(remoteValue);
     const local = localValue ? stripCloudMetadata(localValue) : { courses: [], review_items: [] };
-    const merged = workspace.mergeSeedWorkspace(
+    const merged = vocabulary.withLibrary(workspace.mergeSeedWorkspace(
       workspace.mergeWorkspace(local, remote),
       bundledVideoCourseSeed(),
-    );
+    ));
     const mergedFingerprint = workspace.workspaceFingerprint(merged);
 
     if (localValue && remote.courses.length && mergedFingerprint !== workspace.workspaceFingerprint(local)) {
@@ -453,7 +469,8 @@ async function synchronizeWorkspace({ silent = false } = {}) {
     state.cloudCourses = merged.courses;
     state.cloudReviewItems = merged.review_items;
     state.cloudReady = true;
-    $("accountStatus").textContent = `Sync complete: ${merged.courses.length} courses and ${merged.review_items.length} review items.`;
+    const wordCount = vocabulary.entries(merged).length;
+    $("accountStatus").textContent = `Sync complete: ${merged.courses.filter(c => c.id !== vocabulary.GROUP_ID).length} courses, plus ${wordCount} words & phrases.`;
     renderAccountState();
     await refreshDashboard();
   } catch (error) {
@@ -550,12 +567,141 @@ async function initializeCloudSync() {
   }
 }
 
+function courseDashboard(value) {
+  const regular = vocabulary.courseWorkspace(value);
+  return workspace.dashboardFromWorkspace(regular.courses, regular.review_items, selectedDate());
+}
+
+function setWorkspaceView(view) {
+  closeCourseReview();
+  state.workspaceView = view === "vocabulary" ? "vocabulary" : "courses";
+  $("coursesView").hidden = state.workspaceView !== "courses";
+  $("vocabularyView").hidden = state.workspaceView !== "vocabulary";
+  $("coursesViewButton").setAttribute("aria-pressed", String(state.workspaceView === "courses"));
+  $("vocabularyViewButton").setAttribute("aria-pressed", String(state.workspaceView === "vocabulary"));
+  const pageUrl = new URL(window.location.href);
+  pageUrl.hash = state.workspaceView === "vocabulary" ? "vocabulary" : "";
+  window.history.replaceState(null, "", pageUrl);
+  if (state.workspaceView === "vocabulary") renderVocabulary();
+}
+
+function updateVocabularyLibrary(value) {
+  state.vocabularyWorkspace = vocabulary.withLibrary(value);
+  const items = vocabulary.entries(state.vocabularyWorkspace);
+  $("vocabularyNavCount").textContent = String(items.length);
+  const sources = new Map(items.flatMap(item => item.source_courses || []).map(c => [c.course_id, c.title]));
+  const previous = $("vocabularySource").value;
+  $("vocabularySource").innerHTML = '<option value="all">全部课程</option>'
+    + [...sources].map(([id, title]) => `<option value="${escapeHtml(id)}">${escapeHtml(title)}</option>`).join("");
+  $("vocabularySource").value = sources.has(previous) ? previous : "all";
+  $("vocabularySummary").textContent = `${items.length} 个表达 · 来自 ${sources.size} 门课程`;
+  $("vocabularyNotice").textContent = state.user || state.localBackendAvailable === true
+    ? "相同表达已合并，来源课程保留。词库的复习进度单独记录。"
+    : "当前展示内置课程词库。登录后会汇总你的其他课程，并同步词库复习进度。";
+  renderVocabulary();
+}
+
+function filteredVocabulary() {
+  return vocabulary.filterEntries(vocabulary.entries(state.vocabularyWorkspace), {
+    query: $("vocabularySearch").value, kind: $("vocabularyKind").value,
+    courseId: $("vocabularySource").value, dueOnly: $("vocabularyDueOnly").checked, date: selectedDate(),
+  });
+}
+
+function vocabularyTeachingHtml(item) {
+  return `<section class="vocabulary-step"><h3><span>01</span>意思</h3><p>${escapeHtml(item.meaning)}</p></section>
+    <section class="vocabulary-step"><h3><span>02</span>怎么用</h3><p>${escapeHtml(item.usage)}</p></section>
+    <section class="vocabulary-step"><h3><span>03</span>例句</h3><div><p class="example-english" lang="en">${escapeHtml(item.example)}</p><p class="example-chinese">${escapeHtml(item.example_zh)}</p></div></section>`;
+}
+
+function renderVocabulary() {
+  const items = filteredVocabulary();
+  const due = items.filter(item => item.next_due <= selectedDate()).length;
+  $("vocabularyResultCount").textContent = `找到 ${items.length} 个表达 · ${due} 个待复习`;
+  $("vocabularyPracticeButton").disabled = !items.length;
+  $("vocabularyDueButton").disabled = !due;
+  $("vocabularyMoreButton").hidden = items.length <= state.vocabularyLimit;
+  $("vocabularyList").innerHTML = items.slice(0, state.vocabularyLimit).map((item, index) => `
+    <details class="vocabulary-entry"${index === 0 ? " open" : ""}>
+      <summary><strong lang="en">${escapeHtml(item.item)}</strong><span class="vocabulary-kind">${item.kind === "word" ? "单词" : "短语"}</span></summary>
+      <div class="vocabulary-entry-body">${vocabularyTeachingHtml(item)}
+        <div class="vocabulary-entry-footer"><p class="vocabulary-source">来源：${(item.source_courses || []).map(c => escapeHtml(c.title)).join(" · ")}</p>
+          <div class="action-row"><button class="button quiet" type="button" data-vocab-action="speak" data-vocab-id="${escapeHtml(item.id)}" aria-label="播放 ${escapeHtml(item.item)} 发音">▶ 发音</button>
+            <button class="button secondary" type="button" data-vocab-action="study" data-vocab-id="${escapeHtml(item.id)}">练习这个表达</button></div>
+        </div>
+      </div>
+    </details>`).join("") || '<div class="empty-state">没有找到匹配的表达。试试其他关键词或来源课程。</div>';
+}
+
+function filterVocabulary() { state.vocabularyLimit = 20; renderVocabulary(); }
+function showMoreVocabulary() { state.vocabularyLimit += 20; renderVocabulary(); }
+
+function startVocabularyReview(mode, itemId = "") {
+  const items = mode === "single" ? vocabulary.entries(state.vocabularyWorkspace).filter(item => item.id === itemId)
+    : filteredVocabulary().filter(item => mode !== "due" || item.next_due <= selectedDate());
+  if (!items.length) return;
+  closeCourseReview();
+  state.sessionKind = "vocabulary";
+  state.selectedCourseId = vocabulary.GROUP_ID;
+  state.sessionMode = "vocabulary";
+  state.sessionCards = items.map(workspace.reviewCard);
+  state.sessionInitialCount = items.length;
+  $("activeCourseTitle").textContent = "单词与短语 · 独立复习";
+  $("activeCourseSummary").textContent = "练习对应的英文表达，记录自己是否真正掌握了意思和用法。";
+  $("sessionLabel").textContent = "WORDS & PHRASES";
+  $("reviewModeDescription").textContent = reviewModeMeta("vocabulary").description;
+  $("reviewCoreBadge").hidden = true;
+  $("courseReviewWorkspace").hidden = false;
+  renderActiveCard();
+  $("courseReviewWorkspace").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+async function submitVocabularyResult(result) {
+  const card = activeCard();
+  const generation = state.reviewGeneration;
+  if (!card || state.reviewSaving) return;
+  if (!state.user && state.localBackendAvailable !== true) {
+    showToast("请先登录，以保存并同步词库复习进度。");
+    openAccountDialog();
+    return;
+  }
+  state.reviewSaving = true;
+  const groupButtons = document.querySelectorAll(".grade-button");
+  groupButtons.forEach(button => { button.disabled = true; });
+  try {
+    const current = state.localBackendAvailable === true ? state.localWorkspace
+      : { courses: state.cloudCourses, review_items: state.cloudReviewItems };
+    const updated = { ...current, review_items: workspace.recordReviewResult(current.review_items, card.id, result, selectedDate()) };
+    if (state.localBackendAvailable === true) {
+      await writeLocalWorkspace(updated);
+      state.localWorkspace = updated;
+    } else {
+      await cloud.saveReviewItem(state.user.id, updated.review_items.find(item => item.id === card.id));
+      state.cloudReviewItems = updated.review_items;
+    }
+    if (generation === state.reviewGeneration && state.sessionKind === "vocabulary") {
+      const index = state.sessionCards.findIndex(item => item.id === card.id);
+      if (index >= 0) {
+        state.sessionCards.splice(index, 1);
+        if (state.currentReviewIndex > index) state.currentReviewIndex -= 1;
+        state.currentReviewIndex = Math.min(state.currentReviewIndex, Math.max(0, state.sessionCards.length - 1));
+        renderActiveCard();
+      }
+    }
+    await refreshDashboard();
+    if (state.localBackendAvailable === true) scheduleCloudSync();
+    showToast("词库复习进度已保存。");
+  } catch (error) { showToast(`Could not save: ${error.message}`); }
+  finally { state.reviewSaving = false; groupButtons.forEach(button => { button.disabled = false; }); }
+}
+
 function toggleCourse(courseId) {
   state.expandedCourseId = state.expandedCourseId === courseId ? "" : courseId;
   renderCourses();
 }
 
 function startCourseReview(courseId, mode = "due") {
+  state.sessionKind = "course";
   const course = (state.dashboard?.courses || []).find((entry) => entry.id === courseId);
   if (!course) return;
   const normalizedMode = normalizeReviewMode(mode);
@@ -585,6 +731,7 @@ function startCourseReview(courseId, mode = "due") {
 }
 
 function closeCourseReview() {
+  state.reviewGeneration += 1;
   stopReviewSpeech();
   state.selectedCourseId = "";
   state.sessionCards = [];
@@ -593,6 +740,8 @@ function closeCourseReview() {
   state.fullReviewCompletionEventId = "";
   state.fullReviewCompletionRecorded = false;
   state.fullReviewLastCardId = "";
+  state.sessionKind = "course";
+  $("vocabularyExplanation").hidden = true;
   $("courseReviewWorkspace").hidden = true;
 }
 
@@ -629,6 +778,10 @@ function renderActiveCard() {
   $("reviewEmptyDescription").textContent = modeMeta.emptyDescription;
   if (!card) return;
   resetCardFeedback();
+  const isVocabulary = state.sessionKind === "vocabulary";
+  $("reviewPromptLabel").textContent = isVocabulary ? "释义 · 回忆对应的英文表达" : "Chinese prompt";
+  $("answerInput").placeholder = isVocabulary ? "输入对应的单词或短语，再查看用法和例句。" : "Type your English, or record yourself saying the full sentence.";
+  $("vocabularyExplanation").hidden = true;
   $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
   $("previousReviewButton").disabled = state.currentReviewIndex <= 0;
   $("nextReviewButton").disabled = state.currentReviewIndex >= state.sessionCards.length - 1;
@@ -652,6 +805,10 @@ function revealReviewAnswer(preferredAnswer = "") {
   if (!card) return;
   $("answerTarget").textContent = preferredAnswer || card.target_sentence || card.answer;
   $("answerTarget").classList.add("revealed");
+  if (state.sessionKind === "vocabulary") {
+    $("vocabularyExplanation").innerHTML = vocabularyTeachingHtml(card);
+    $("vocabularyExplanation").hidden = false;
+  }
 }
 
 function checkReviewAnswer() {
@@ -700,6 +857,7 @@ function goToNextReviewCard() {
 }
 
 async function submitReviewResult(result) {
+  if (state.sessionKind === "vocabulary") return submitVocabularyResult(result);
   const card = activeCard();
   if (!card) return;
   try {
@@ -1055,7 +1213,17 @@ function bindDialogDismissal(dialog) {
 }
 
 async function initialize() {
+  updateVocabularyLibrary(bundledVideoCourseSeed());
+  $("vocabularyList").addEventListener("click", (event) => {
+    const button = event.target.closest("[data-vocab-action]");
+    if (!button) return;
+    const item = vocabulary.entries(state.vocabularyWorkspace).find(entry => entry.id === button.dataset.vocabId);
+    if (!item) return;
+    if (button.dataset.vocabAction === "study") startVocabularyReview("single", item.id);
+    if (button.dataset.vocabAction === "speak") speakEnglish(item.item);
+  });
   $("reviewDateInput").value = todayIso();
+  setWorkspaceView(window.location.hash === "#vocabulary" ? "vocabulary" : "courses");
   $("reviewDateInput").addEventListener("change", () => {
     closeCourseReview();
     refreshDashboard();

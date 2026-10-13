@@ -35,6 +35,11 @@
   </header>
 
   <main class="app-shell">
+    <nav class="workspace-nav" aria-label="学习分组">
+      <button type="button" id="coursesViewButton" aria-pressed="true" onclick="setWorkspaceView('courses')">课程复习</button>
+      <button type="button" id="vocabularyViewButton" aria-pressed="false" onclick="setWorkspaceView('vocabulary')">单词与短语 <span id="vocabularyNavCount">0</span></button>
+    </nav>
+    <div id="coursesView">
     <section class="workspace-intro" aria-labelledby="pageTitle">
       <div>
         <p class="eyebrow">MY COURSES</p>
@@ -88,6 +93,28 @@
         <div class="loading-state">Loading courses…</div>
       </div>
     </section>
+    </div>
+
+    <section id="vocabularyView" hidden aria-labelledby="vocabularyTitle" lang="zh-CN">
+      <div class="workspace-intro">
+        <div><p class="eyebrow">WORDS &amp; PHRASES</p><h1 id="vocabularyTitle">单词与短语</h1>
+          <p>汇总各课程的重点表达。先理解意思，再掌握用法，最后通过例句学会使用。</p></div>
+        <span class="vocabulary-summary" id="vocabularySummary"></span>
+      </div>
+      <div class="vocabulary-toolbar">
+        <label class="vocabulary-search"><span>搜索表达或中文意思</span><input id="vocabularySearch" type="search" placeholder="例如 look forward to、期待" oninput="filterVocabulary()"></label>
+        <label class="sort-field"><span>类型</span><select id="vocabularyKind" aria-label="类型" onchange="filterVocabulary()"><option value="all">全部表达</option><option value="word">单词</option><option value="phrase">短语与表达</option></select></label>
+        <label class="sort-field"><span>来源课程</span><select id="vocabularySource" aria-label="来源课程" onchange="filterVocabulary()"><option value="all">全部课程</option></select></label>
+        <label class="due-filter"><input id="vocabularyDueOnly" type="checkbox" onchange="filterVocabulary()">只看待复习</label>
+      </div>
+      <div class="vocabulary-actions"><p id="vocabularyResultCount" role="status"></p><div class="action-row">
+        <button class="button secondary" id="vocabularyDueButton" type="button" onclick="startVocabularyReview('due')">复习到期表达</button>
+        <button class="button primary" id="vocabularyPracticeButton" type="button" onclick="startVocabularyReview('filtered')">练习当前分组</button>
+      </div></div>
+      <p class="vocabulary-notice" id="vocabularyNotice"></p>
+      <div id="vocabularyList" class="vocabulary-list"></div>
+      <button class="button quiet vocabulary-more" id="vocabularyMoreButton" type="button" onclick="showMoreVocabulary()" hidden>显示更多表达</button>
+    </section>
 
     <section class="review-workspace" id="courseReviewWorkspace" hidden aria-labelledby="activeCourseTitle">
       <div class="review-header">
@@ -115,7 +142,7 @@
 
       <div class="review-card" id="reviewCard">
         <div class="prompt-block">
-          <span>Chinese prompt</span>
+          <span id="reviewPromptLabel">Chinese prompt</span>
           <p id="reviewPrompt">Choose a course to begin.</p>
         </div>
 
@@ -133,6 +160,7 @@
         </div>
 
         <div class="answer-target" id="answerTarget" aria-live="polite">The reference answer is hidden by default.</div>
+        <div id="vocabularyExplanation" class="vocabulary-explanation" hidden lang="zh-CN"></div>
 
         <div class="feedback" id="reviewFeedback" aria-live="polite">
           Recall the English first, then type or say it before checking your answer.
@@ -250,6 +278,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="/assets/workspace-core.js"></script>
   <script src="/assets/video-course-seed.js"></script>
+  <script src="/assets/vocabulary-guides.js"></script>
+  <script src="/assets/vocabulary-core.js"></script>
   <script src="/assets/cloud-sync.js"></script>
   <script src="/assets/app.js"></script>
 </body>

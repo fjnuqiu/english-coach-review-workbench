@@ -24,6 +24,56 @@
   box-sizing: border-box;
 }
 
+[hidden] { display: none !important; }
+
+.workspace-nav { display: flex; gap: 8px; margin-bottom: 30px; border-bottom: 1px solid var(--line); padding-bottom: 14px; }
+.workspace-nav button { padding: 10px 18px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--muted); font-weight: 700; }
+.workspace-nav button[aria-pressed="true"] { background: var(--green-soft); color: var(--green-dark); border-color: #bad8ca; }
+.workspace-nav span { margin-left: 6px; padding: 2px 7px; border-radius: 12px; background: #fff; font-size: 12px; }
+.vocabulary-summary { color: var(--green-dark); white-space: nowrap; font-weight: 700; }
+.vocabulary-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; margin: 24px 0 18px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.vocabulary-search { display: grid; flex: 1 1 250px; gap: 6px; font-size: 12px; color: var(--muted); }
+.vocabulary-search input { width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-soft); font-size: 14px; }
+.vocabulary-toolbar .sort-field select { max-width: 240px; }
+.due-filter { display: flex; align-items: center; gap: 7px; min-height: 42px; font-size: 13px; white-space: nowrap; }
+.due-filter input { width: 16px; height: 16px; accent-color: var(--green); }
+.vocabulary-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+.vocabulary-actions p { margin: 0; color: var(--muted); font-size: 13px; }
+.vocabulary-notice { color: var(--muted); font-size: 13px; margin: 14px 0 20px; }
+.vocabulary-list { display: grid; gap: 12px; }
+.vocabulary-entry { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
+.vocabulary-entry summary { display: flex; align-items: center; gap: 14px; padding: 20px 24px; cursor: pointer; list-style: none; }
+.vocabulary-entry summary::-webkit-details-marker { display: none; }
+.vocabulary-entry summary::after { content: '＋'; margin-left: auto; color: var(--green); font-size: 22px; }
+.vocabulary-entry[open] summary::after { content: '−'; }
+.vocabulary-entry summary strong { font-size: 20px; font-weight: 700; }
+.vocabulary-kind { flex-shrink: 0; font-size: 11px; border: 1px solid #c6dfd4; color: var(--green-dark); border-radius: 5px; padding: 2px 7px; }
+.vocabulary-entry-body { padding: 0 24px 22px; }
+.vocabulary-step { border-top: 1px solid var(--line); padding: 16px 0; display: grid; grid-template-columns: 80px 1fr; gap: 16px; }
+.vocabulary-step h3 { font-size: 13px; margin: 3px 0 0; color: var(--green-dark); }
+.vocabulary-step h3 span { display: block; color: #95a89e; font-size: 11px; margin-bottom: 2px; font-variant-numeric: tabular-nums; }
+.vocabulary-step p { margin: 0; font-size: 15px; line-height: 1.8; }
+.vocabulary-step .example-english { font-size: 17px; font-weight: 600; }
+.vocabulary-step .example-chinese { color: var(--muted); margin-top: 6px; }
+.vocabulary-entry-footer { display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+.vocabulary-source { max-width: 680px; color: var(--muted); font-size: 12px; margin: 0; }
+.vocabulary-more { display: block; margin: 24px auto 0; }
+.vocabulary-explanation { padding: 0 16px; border: 1px solid #c6dfd4; border-radius: 8px; margin: 14px 0; background: var(--green-soft); }
+@media (max-width: 640px) {
+  #translateToolButton .tool-icon { font-size: 11px; }
+  .workspace-nav button { padding: 10px 12px; }
+  #vocabularyView .workspace-intro { align-items: start; flex-direction: column; gap: 8px; }
+  .vocabulary-toolbar { padding: 16px; gap: 12px; }
+  .vocabulary-toolbar .sort-field { flex: 1 1 130px; }
+  .vocabulary-toolbar .sort-field select { max-width: 100%; width: 100%; }
+  .vocabulary-entry summary { padding: 18px 16px; gap: 8px; }
+  .vocabulary-entry summary strong { font-size: 18px; overflow-wrap: anywhere; }
+  .vocabulary-entry-body { padding: 0 16px 18px; }
+  .vocabulary-step { grid-template-columns: 1fr; gap: 8px; }
+  .vocabulary-step h3 span { display: inline; margin-right: 8px; }
+  .vocabulary-entry-footer .action-row { width: 100%; }
+}
+
 body {
   margin: 0;
   color: var(--ink);
