@@ -612,8 +612,11 @@ function filteredVocabulary() {
   });
 }
 
-function vocabularyTeachingHtml(item) {
-  return `<section class="vocabulary-step"><h3><span>01</span>意思</h3><p>${escapeHtml(item.meaning)}</p></section>
+function vocabularyTeachingHtml(item, { showEnglish = false } = {}) {
+  const firstStep = showEnglish
+    ? `<div class="vocabulary-term"><strong lang="en">${escapeHtml(item.item)}</strong>${item.pronunciation ? `<span class="vocabulary-pronunciation">${escapeHtml(item.pronunciation)}</span>` : ""}</div>`
+    : `<p>${escapeHtml(item.meaning)}</p>`;
+  return `<section class="vocabulary-step"><h3><span>01</span>${showEnglish ? "英语" : "意思"}</h3>${firstStep}</section>
     <section class="vocabulary-step"><h3><span>02</span>怎么用</h3><p>${escapeHtml(item.usage)}</p></section>
     <section class="vocabulary-step"><h3><span>03</span>例句</h3><div><p class="example-english" lang="en">${escapeHtml(item.example)}</p><p class="example-chinese">${escapeHtml(item.example_zh)}</p></div></section>`;
 }
@@ -622,16 +625,15 @@ function renderVocabulary() {
   const items = filteredVocabulary();
   const visibleItems = items.slice(0, state.vocabularyLimit);
   const openIds = new Set([...document.querySelectorAll("#vocabularyList details[open]")].map(entry => entry.dataset.vocabEntry));
-  const retainOpen = visibleItems.some(item => openIds.has(item.id));
   const due = items.filter(item => item.next_due <= selectedDate()).length;
   $("vocabularyResultCount").textContent = `找到 ${items.length} 个表达 · ${due} 个待复习`;
   $("vocabularyPracticeButton").disabled = !items.length;
   $("vocabularyDueButton").disabled = !due;
   $("vocabularyMoreButton").hidden = items.length <= state.vocabularyLimit;
-  $("vocabularyList").innerHTML = visibleItems.map((item, index) => `
-    <details class="vocabulary-entry" data-vocab-entry="${escapeHtml(item.id)}"${(retainOpen ? openIds.has(item.id) : index === 0) ? " open" : ""}>
-      <summary><div class="vocabulary-term"><strong lang="en">${escapeHtml(item.item)}</strong>${item.pronunciation ? `<span class="vocabulary-pronunciation">${escapeHtml(item.pronunciation)}</span>` : ""}</div><span class="vocabulary-kind">${({ word: "单词", phrase: "短语", expression: "表达/句型" })[item.kind] || "表达"}</span></summary>
-      <div class="vocabulary-entry-body">${vocabularyTeachingHtml(item)}
+  $("vocabularyList").innerHTML = visibleItems.map(item => `
+    <details class="vocabulary-entry" data-vocab-entry="${escapeHtml(item.id)}"${openIds.has(item.id) ? " open" : ""}>
+      <summary><strong class="vocabulary-meaning">${escapeHtml(item.meaning)}</strong><span class="vocabulary-kind">${({ word: "单词", phrase: "短语", expression: "表达/句型" })[item.kind] || "表达"}</span></summary>
+      <div class="vocabulary-entry-body">${vocabularyTeachingHtml(item, { showEnglish: true })}
         <div class="vocabulary-entry-footer"><p class="vocabulary-source">来源：${(item.source_courses || []).map(c => escapeHtml(c.title)).join(" · ")}</p>
           <div class="action-row"><button class="button quiet" type="button" data-vocab-action="speak" data-vocab-id="${escapeHtml(item.id)}" aria-label="播放 ${escapeHtml(item.item)} 发音">▶ 发音</button>
             <button class="button secondary" type="button" data-vocab-action="study" data-vocab-id="${escapeHtml(item.id)}">练习这个表达</button></div>

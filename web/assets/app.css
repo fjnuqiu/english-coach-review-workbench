@@ -44,10 +44,12 @@
 .vocabulary-entry { border: 1px solid var(--line); border-radius: 10px; background: var(--surface); overflow: hidden; }
 .vocabulary-entry summary { display: flex; align-items: center; gap: 14px; padding: 20px 24px; cursor: pointer; list-style: none; }
 .vocabulary-entry summary::-webkit-details-marker { display: none; }
-.vocabulary-entry summary::after { content: '＋'; margin-left: auto; color: var(--green); font-size: 22px; }
+.vocabulary-entry summary::after { content: '＋'; margin-left: auto; flex-shrink: 0; color: var(--green); font-size: 22px; }
 .vocabulary-entry[open] summary::after { content: '−'; }
 .vocabulary-entry summary strong { font-size: 20px; font-weight: 700; }
+.vocabulary-meaning { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .vocabulary-term { min-width: 0; overflow-wrap: anywhere; }
+.vocabulary-term strong { font-size: 20px; font-weight: 700; }
 .vocabulary-pronunciation { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; font-weight: 400; }
 .vocabulary-kind { flex-shrink: 0; font-size: 11px; border: 1px solid #c6dfd4; color: var(--green-dark); border-radius: 5px; padding: 2px 7px; }
 .vocabulary-entry-body { padding: 0 24px 22px; }
