@@ -358,6 +358,29 @@ test("cloud review result follows the same interval ladder as the local coach", 
   assert.equal(shaky[0].history.length, 2);
 });
 
+test("Next records a review without changing mastery or advancing the interval ladder", () => {
+  const source = [{ id: "one", course_id: "lesson", item: "One", last_result: "shaky", status: "needs_review", interval_days: 7, next_due: "2026-10-18", history: [{ date: "2026-10-18", result: "shaky" }] }];
+  const score = workspace.cardMasteryScore(source[0]);
+  const once = workspace.recordReviewResult(source, "one", "reviewed", "2026-10-19", "2026-10-19T10:00:00Z", "session-one");
+  const retried = workspace.recordReviewResult(once, "one", "reviewed", "2026-10-19", "2026-10-19T10:00:01Z", "session-one");
+  assert.deepEqual(retried, once);
+  assert.equal(source[0].history.length, 1);
+  assert.equal(once[0].history.length, 2);
+  assert.equal(once[0].last_result, "shaky");
+  assert.equal(once[0].interval_days, 7);
+  assert.equal(once[0].status, "needs_review");
+  assert.equal(once[0].next_due, "2026-10-20");
+  assert.equal(workspace.cardMasteryScore(once[0]), score);
+  const dashboard = workspace.dashboardFromWorkspace([{ id: "lesson", card_ids: ["one"] }], once, "2026-10-19");
+  assert.equal(dashboard.courses[0].completed_today, 1);
+  assert.equal(dashboard.courses[0].due_count, 0);
+  assert.equal(dashboard.courses[0].mastered_count, 0);
+  const future = workspace.recordReviewResult([{ ...source[0], next_due: "2026-11-01" }], "one", "reviewed", "2026-10-19");
+  assert.equal(future[0].next_due, "2026-11-01");
+  const merged = workspace.mergeWorkspace({ courses: [], review_items: once }, { courses: [], review_items: retried });
+  assert.equal(merged.review_items[0].history.length, 2);
+});
+
 test("workspace merge keeps courses from both devices and the newer progress", () => {
   const local = {
     courses: [{ id: "local", title: "Local", card_ids: ["card"], selected_card_ids: ["card"] }],
@@ -488,5 +511,5 @@ test("page exposes account sync and mastery sorting controls", async () => {
   assert.match(script, /reviewed_recently/);
   assert.match(script, /maybeRecordFullContentCompletion/);
   assert.match(script, /fullReviewCompletionRecorded/);
-  assert.match(script, /fullReviewLastCardId/);
+  assert.match(html, /id="nextReviewButton"/);
 });

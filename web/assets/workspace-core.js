@@ -417,22 +417,28 @@
     return INTERVAL_STEPS.find((step) => Number(current || 1) < step) || INTERVAL_STEPS.at(-1);
   }
 
-  function recordReviewResult(reviewItems, itemId, result, dateText, now = new Date().toISOString()) {
-    if (!["pass", "shaky", "fail"].includes(result)) throw new Error("Invalid mastery result");
+  function recordReviewResult(reviewItems, itemId, result, dateText, now = new Date().toISOString(), eventId = "") {
+    if (!["pass", "shaky", "fail", "reviewed"].includes(result)) throw new Error("Invalid mastery result");
     let found = false;
     const updated = (reviewItems || []).map((source) => {
       if (source.id !== itemId) return clone(source);
       found = true;
       const item = clone(source);
+      if (eventId && historyEntries(item).some(entry => entry?.id === eventId)) return item;
       const previousInterval = Number(item.interval_days || 1);
-      const interval = nextInterval(previousInterval, result);
-      const nextDue = addDays(dateText, interval);
-      item.last_result = result;
-      item.interval_days = interval;
+      const interval = result === "reviewed" ? previousInterval : nextInterval(previousInterval, result);
+      const nextDue = result === "reviewed"
+        ? (String(item.next_due || "") > dateText ? item.next_due : addDays(dateText, 1))
+        : addDays(dateText, interval);
+      if (result !== "reviewed") {
+        item.last_result = result;
+        item.interval_days = interval;
+        item.status = result === "pass" ? "reviewing" : "needs_review";
+      }
       item.next_due = nextDue;
-      item.status = result === "pass" ? "reviewing" : "needs_review";
       item.sync_updated_at = now;
       item.history = [...(item.history || []), {
+        ...(eventId ? { id: eventId } : {}),
         date: dateText,
         result,
         previous_interval_days: previousInterval,
@@ -470,6 +476,7 @@
   }
 
   function eventKey(entry) {
+    if (entry?.id) return `event:${entry.id}`;
     return [
       entry?.synced_at || "",
       entry?.date || "",
@@ -512,7 +519,9 @@
       next_due: progressSource.next_due,
       status: progressSource.status,
       sync_updated_at: progressSource.sync_updated_at,
-      history: [...historyMap.values()].sort((left, right) => eventKey(left).localeCompare(eventKey(right))),
+      history: [...historyMap.values()].sort((left, right) =>
+        String(left?.synced_at || left?.date || "").localeCompare(String(right?.synced_at || right?.date || ""))
+        || eventKey(left).localeCompare(eventKey(right))),
     };
   }
 

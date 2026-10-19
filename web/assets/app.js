@@ -17,9 +17,9 @@ const state = {
   sessionMode: "due",
   currentReviewIndex: 0,
   sessionInitialCount: 0,
+  reviewSessionId: "",
   fullReviewCompletionEventId: "",
   fullReviewCompletionRecorded: false,
-  fullReviewLastCardId: "",
   translatedEnglish: "",
   reviewRecognition: null,
   reviewRecording: false,
@@ -655,6 +655,7 @@ function startVocabularyReview(mode, itemId = "") {
   state.sessionMode = "vocabulary";
   state.sessionCards = items.map(workspace.reviewCard);
   state.sessionInitialCount = items.length;
+  state.reviewSessionId = newFullReviewCompletionEventId();
   $("activeCourseTitle").textContent = "单词与短语 · 独立复习";
   $("activeCourseSummary").textContent = "练习对应的英文表达，记录自己是否真正掌握了意思和用法。";
   $("sessionLabel").textContent = "WORDS & PHRASES";
@@ -665,54 +666,15 @@ function startVocabularyReview(mode, itemId = "") {
   $("courseReviewWorkspace").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-async function submitVocabularyResult(result) {
-  const card = activeCard();
-  const generation = state.reviewGeneration;
-  if (!card || state.reviewSaving) return;
-  if (!state.user && state.localBackendAvailable !== true) {
-    showToast("请先登录，以保存并同步词库复习进度。");
-    openAccountDialog();
-    return;
-  }
-  state.reviewSaving = true;
-  const groupButtons = document.querySelectorAll(".grade-button");
-  groupButtons.forEach(button => { button.disabled = true; });
-  try {
-    const current = state.localBackendAvailable === true ? state.localWorkspace
-      : { courses: state.cloudCourses, review_items: state.cloudReviewItems };
-    const updated = { ...current, review_items: workspace.recordReviewResult(current.review_items, card.id, result, selectedDate()) };
-    if (state.localBackendAvailable === true) {
-      await writeLocalWorkspace(updated);
-      state.localWorkspace = updated;
-    } else {
-      await cloud.saveReviewItem(state.user.id, updated.review_items.find(item => item.id === card.id));
-      state.cloudReviewItems = updated.review_items;
-    }
-    if (generation === state.reviewGeneration && state.sessionKind === "vocabulary") {
-      const index = state.sessionCards.findIndex(item => item.id === card.id);
-      if (index >= 0) {
-        state.sessionCards.splice(index, 1);
-        if (state.currentReviewIndex > index) state.currentReviewIndex -= 1;
-        state.currentReviewIndex = Math.min(state.currentReviewIndex, Math.max(0, state.sessionCards.length - 1));
-        renderActiveCard();
-      }
-    }
-    await refreshDashboard();
-    if (state.localBackendAvailable === true) scheduleCloudSync();
-    showToast("词库复习进度已保存。");
-  } catch (error) { showToast(`Could not save: ${error.message}`); }
-  finally { state.reviewSaving = false; groupButtons.forEach(button => { button.disabled = false; }); }
-}
-
 function toggleCourse(courseId) {
   state.expandedCourseId = state.expandedCourseId === courseId ? "" : courseId;
   renderCourses();
 }
 
 function startCourseReview(courseId, mode = "due") {
-  state.sessionKind = "course";
   const course = (state.dashboard?.courses || []).find((entry) => entry.id === courseId);
   if (!course) return;
+  closeCourseReview();
   const normalizedMode = normalizeReviewMode(mode);
   state.selectedCourseId = courseId;
   state.expandedCourseId = courseId;
@@ -721,11 +683,9 @@ function startCourseReview(courseId, mode = "due") {
   state.sessionCards = [...(preferredCards || [])];
   state.currentReviewIndex = 0;
   state.sessionInitialCount = state.sessionCards.length;
-  state.fullReviewCompletionEventId = normalizedMode === "full" ? newFullReviewCompletionEventId() : "";
+  state.reviewSessionId = newFullReviewCompletionEventId();
+  state.fullReviewCompletionEventId = normalizedMode === "full" ? state.reviewSessionId : "";
   state.fullReviewCompletionRecorded = false;
-  state.fullReviewLastCardId = normalizedMode === "full"
-    ? String(state.sessionCards.at(-1)?.id || "")
-    : "";
   const presentation = bundledCoursePresentation(course);
   $("activeCourseTitle").textContent = presentation.title;
   $("activeCourseSummary").textContent = presentation.summary;
@@ -746,9 +706,9 @@ function closeCourseReview() {
   state.sessionCards = [];
   state.sessionMode = "due";
   state.currentReviewIndex = 0;
+  state.reviewSessionId = "";
   state.fullReviewCompletionEventId = "";
   state.fullReviewCompletionRecorded = false;
-  state.fullReviewLastCardId = "";
   state.sessionKind = "course";
   $("vocabularyExplanation").hidden = true;
   $("courseReviewWorkspace").hidden = true;
@@ -785,6 +745,7 @@ function renderActiveCard() {
   $("reviewPositionText").textContent = empty ? `${state.sessionInitialCount} / ${state.sessionInitialCount}` : `${state.currentReviewIndex + 1} / ${state.sessionCards.length}`;
   $("reviewEmptyTitle").textContent = modeMeta.emptyTitle;
   $("reviewEmptyDescription").textContent = modeMeta.emptyDescription;
+  updateReviewNavigation();
   if (!card) return;
   resetCardFeedback();
   const isVocabulary = state.sessionKind === "vocabulary";
@@ -792,9 +753,16 @@ function renderActiveCard() {
   $("answerInput").placeholder = isVocabulary ? "输入对应的单词、短语或句子，再查看用法和例句。" : "Type your English, or record yourself saying the full sentence.";
   $("vocabularyExplanation").hidden = true;
   $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
-  $("previousReviewButton").disabled = state.currentReviewIndex <= 0;
-  $("nextReviewButton").disabled = state.currentReviewIndex >= state.sessionCards.length - 1;
-  void maybeRecordFullContentCompletion();
+}
+
+function updateReviewNavigation() {
+  $("previousReviewButton").disabled = state.reviewSaving || state.currentReviewIndex <= 0;
+  $("nextReviewButton").disabled = state.reviewSaving || !activeCard();
+  $("nextReviewButton").textContent = state.reviewSaving ? "保存中…"
+    : state.sessionCards.length === 1 ? "完成本轮 ✓" : "下一个 →";
+  document.querySelectorAll(".grade-button").forEach(button => {
+    button.disabled = state.reviewSaving || !activeCard();
+  });
 }
 
 function renderDiffTokens(tokens, highlighted, className) {
@@ -858,50 +826,74 @@ function checkReviewAnswer() {
 }
 
 function goToPreviousReviewCard() {
-  if (state.currentReviewIndex <= 0) return;
+  if (state.reviewSaving || state.currentReviewIndex <= 0) return;
   state.currentReviewIndex -= 1;
   renderActiveCard();
 }
 
-function goToNextReviewCard() {
-  if (state.currentReviewIndex >= state.sessionCards.length - 1) return;
-  state.currentReviewIndex += 1;
-  renderActiveCard();
+async function goToNextReviewCard() {
+  return saveCurrentReview("reviewed");
 }
 
 async function submitReviewResult(result) {
-  if (state.sessionKind === "vocabulary") return submitVocabularyResult(result);
+  return saveCurrentReview(result);
+}
+
+async function saveCurrentReview(result) {
   const card = activeCard();
-  if (!card) return;
+  if (!card || state.reviewSaving) return;
+  const local = state.localBackendAvailable === true;
+  const userId = state.user?.id;
+  if (!local && !userId) {
+    showToast("请先登录，以保存并同步复习进度。");
+    openAccountDialog();
+    return;
+  }
+  const generation = state.reviewGeneration;
+  const eventId = `${state.reviewSessionId}:${card.id}:${result}`;
+  const date = selectedDate();
+  state.reviewSaving = true;
+  updateReviewNavigation();
   try {
-    if (state.localBackendAvailable === false) {
-      if (!state.user) throw new Error("Sign in to your account first");
-      state.cloudReviewItems = workspace.recordReviewResult(
-        state.cloudReviewItems,
-        card.id,
-        result,
-        selectedDate(),
-      );
-      const updatedItem = state.cloudReviewItems.find((item) => item.id === card.id);
-      await cloud.saveReviewItem(state.user.id, updatedItem);
-    } else {
+    if (local && state.sessionKind !== "vocabulary") {
       await apiJson("/api/review-result", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ item_id: card.id, result, date: selectedDate() }),
+        body: JSON.stringify({ item_id: card.id, result, date, event_id: eventId }),
       });
+    } else {
+      const current = local ? state.localWorkspace
+        : { courses: state.cloudCourses, review_items: state.cloudReviewItems };
+      const updated = { ...current, review_items: workspace.recordReviewResult(
+        current.review_items, card.id, result, date, new Date().toISOString(), eventId,
+      ) };
+      const updatedItem = updated.review_items.find(item => item.id === card.id);
+      if (local) {
+        await writeLocalWorkspace(updated);
+        state.localWorkspace = updated;
+      } else {
+        await cloud.saveReviewItem(userId, updatedItem);
+        if (state.user?.id === userId) {
+          state.cloudReviewItems = state.cloudReviewItems.map(item => item.id === card.id ? updatedItem : item);
+        }
+      }
     }
-    const labels = { pass: "Marked as got it", shaky: "Marked as shaky", fail: "Scheduled for an early retry" };
-    showToast(labels[result]);
-    state.sessionCards.splice(state.currentReviewIndex, 1);
-    if (state.currentReviewIndex >= state.sessionCards.length) {
-      state.currentReviewIndex = Math.max(0, state.sessionCards.length - 1);
-    }
+    if (generation !== state.reviewGeneration) return;
+    if (!await maybeRecordFullContentCompletion()) return;
+    if (generation !== state.reviewGeneration) return;
+    const index = state.sessionCards.findIndex(item => item.id === card.id);
+    if (index >= 0) state.sessionCards.splice(index, 1);
+    state.currentReviewIndex = Math.min(state.currentReviewIndex, Math.max(0, state.sessionCards.length - 1));
     renderActiveCard();
     await refreshDashboard();
-    if (state.localBackendAvailable === true) scheduleCloudSync();
+    if (local) scheduleCloudSync();
+    const labels = { reviewed: "已记录本条复习。", pass: "Marked as got it", shaky: "Marked as shaky", fail: "Scheduled for an early retry" };
+    showToast(labels[result]);
   } catch (error) {
     showToast(`Could not save: ${error.message}`);
+  } finally {
+    state.reviewSaving = false;
+    updateReviewNavigation();
   }
 }
 
@@ -909,26 +901,29 @@ async function maybeRecordFullContentCompletion() {
   if (
     state.sessionMode !== "full"
     || state.fullReviewCompletionRecorded
-    || !state.fullReviewLastCardId
-    || activeCard()?.id !== state.fullReviewLastCardId
-  ) return;
+    || state.sessionCards.length !== 1
+  ) return true;
 
-  state.fullReviewCompletionRecorded = true;
+  const generation = state.reviewGeneration;
   const courseId = state.selectedCourseId;
   const eventId = state.fullReviewCompletionEventId;
   const completedAt = new Date().toISOString();
   try {
     if (state.localBackendAvailable === false) {
       if (!state.user) throw new Error("Sign in to your account first");
-      state.cloudCourses = workspace.recordFullContentReview(
+      const userId = state.user.id;
+      const updatedCourses = workspace.recordFullContentReview(
         state.cloudCourses,
         courseId,
         selectedDate(),
         eventId,
         completedAt,
       );
-      const course = state.cloudCourses.find((entry) => entry.id === courseId);
-      await cloud.saveCourse(state.user.id, course);
+      const course = updatedCourses.find((entry) => entry.id === courseId);
+      await cloud.saveCourse(userId, course);
+      if (state.user?.id === userId) {
+        state.cloudCourses = state.cloudCourses.map(entry => entry.id === courseId ? course : entry);
+      }
     } else {
       await apiJson("/api/full-course-review", {
         method: "POST",
@@ -941,12 +936,11 @@ async function maybeRecordFullContentCompletion() {
         }),
       });
     }
-    showToast("Full course review recorded");
-    await refreshDashboard();
-    if (state.localBackendAvailable === true) scheduleCloudSync();
+    if (generation === state.reviewGeneration) state.fullReviewCompletionRecorded = true;
+    return true;
   } catch (error) {
-    state.fullReviewCompletionRecorded = false;
     showToast(`Could not record full-course review: ${error.message}`);
+    return false;
   }
 }
 

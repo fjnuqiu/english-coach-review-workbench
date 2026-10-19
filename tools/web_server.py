@@ -1752,16 +1752,44 @@ def record_review_result(
     result: str,
     on_date: str | Any,
     state_path: Path = coach.DEFAULT_STATE,
+    event_id: str = "",
 ) -> dict[str, Any]:
     if isinstance(on_date, str):
         date_value = coach.parse_date(on_date)
     else:
         date_value = on_date
     items = load_state_items(state_path)
-    updated = coach.update_item_result(items, item_id, result, date_value)
+    updated = coach.update_item_result(items, item_id, result, date_value, event_id)
     coach.save_items(updated, state_path)
     changed = next(item for item in updated if item["id"] == item_id)
     return {"item": changed, "card": review_card(changed)}
+
+
+def record_full_course_review(
+    course_id: str,
+    on_date: str,
+    event_id: str,
+    completed_at: str = "",
+    courses_path: Path = course_store.DEFAULT_COURSES,
+) -> dict[str, Any]:
+    date_value = coach.parse_date(on_date)
+    if not event_id.strip():
+        raise ValueError("event_id is required")
+    courses = course_store.load_courses(courses_path)
+    course = next((entry for entry in courses if entry["id"] == course_id), None)
+    if course is None:
+        raise ValueError("course was not found")
+    events = course.get("full_review_events", [])
+    if not isinstance(events, list):
+        events = []
+    if not any(isinstance(event, dict) and event.get("id") == event_id for event in events):
+        course["full_review_events"] = events + [{
+            "id": event_id,
+            "completed_on": date_value.isoformat(),
+            "completed_at": completed_at or iso_datetime_now(),
+        }]
+        course_store.save_courses(courses, courses_path)
+    return {"course": course}
 
 
 class CoachRequestHandler(BaseHTTPRequestHandler):
@@ -1885,15 +1913,30 @@ class CoachRequestHandler(BaseHTTPRequestHandler):
                 return
             self.send_json(record_checkin_text(text, date_value))
             return
+        if parsed.path == "/api/full-course-review":
+            if not is_loopback_address(self.client_address[0]):
+                self.send_json({"error": "loopback access required"}, HTTPStatus.FORBIDDEN)
+                return
+            body = read_json_body(self)
+            try:
+                self.send_json(record_full_course_review(
+                    str(body.get("course_id") or ""),
+                    str(body.get("date") or coach.today().isoformat()),
+                    str(body.get("event_id") or ""),
+                    str(body.get("completed_at") or ""),
+                ))
+            except ValueError as error:
+                self.send_json({"error": str(error)}, HTTPStatus.BAD_REQUEST)
+            return
         if parsed.path == "/api/review-result":
             body = read_json_body(self)
             item_id = str(body.get("item_id", "")).strip()
             result = str(body.get("result", "")).strip()
             date_value = str(body.get("date") or coach.today().isoformat())
-            if not item_id or result not in {"pass", "shaky", "fail"}:
+            if not item_id or result not in {"pass", "shaky", "fail", "reviewed"}:
                 self.send_json({"error": "item_id and valid result are required"}, HTTPStatus.BAD_REQUEST)
                 return
-            self.send_json(record_review_result(item_id, result, date_value))
+            self.send_json(record_review_result(item_id, result, date_value, event_id=str(body.get("event_id") or "")))
             return
         if parsed.path == "/api/media-checkin":
             self.send_json(

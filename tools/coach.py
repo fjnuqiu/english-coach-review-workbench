@@ -286,23 +286,32 @@ def next_interval_days(current: int, result: str) -> int:
     return INTERVAL_STEPS[-1]
 
 
-def record_result(item: dict[str, Any], result: str, on_date: dt.date) -> dict[str, Any]:
+def record_result(
+    item: dict[str, Any], result: str, on_date: dt.date, event_id: str = ""
+) -> dict[str, Any]:
     updated = copy.deepcopy(item)
+    if event_id and any(isinstance(entry, dict) and entry.get("id") == event_id for entry in updated.get("history", [])):
+        return updated
     previous_interval = int(updated.get("interval_days", 1))
-    interval = next_interval_days(previous_interval, result)
-    next_due = on_date + dt.timedelta(days=interval)
-
-    updated["last_result"] = result
-    updated["interval_days"] = interval
-    updated["next_due"] = next_due.isoformat()
-    updated["status"] = "reviewing" if result == "pass" else "needs_review"
+    if result == "reviewed":
+        interval = previous_interval
+        existing_due = str(updated.get("next_due") or "")
+        next_due_text = existing_due if existing_due > on_date.isoformat() else (on_date + dt.timedelta(days=1)).isoformat()
+    else:
+        interval = next_interval_days(previous_interval, result)
+        next_due_text = (on_date + dt.timedelta(days=interval)).isoformat()
+        updated["last_result"] = result
+        updated["interval_days"] = interval
+        updated["status"] = "reviewing" if result == "pass" else "needs_review"
+    updated["next_due"] = next_due_text
     updated.setdefault("history", []).append(
         {
+            **({"id": event_id} if event_id else {}),
             "date": on_date.isoformat(),
             "result": result,
             "previous_interval_days": previous_interval,
             "next_interval_days": interval,
-            "next_due": next_due.isoformat(),
+            "next_due": next_due_text,
         }
     )
     return updated
@@ -437,13 +446,13 @@ def render_task(
 
 
 def update_item_result(
-    items: list[dict[str, Any]], item_id: str, result: str, on_date: dt.date
+    items: list[dict[str, Any]], item_id: str, result: str, on_date: dt.date, event_id: str = ""
 ) -> list[dict[str, Any]]:
     updated_items = []
     found = False
     for item in items:
         if item["id"] == item_id:
-            updated_items.append(record_result(item, result, on_date))
+            updated_items.append(record_result(item, result, on_date, event_id))
             found = True
         else:
             updated_items.append(item)

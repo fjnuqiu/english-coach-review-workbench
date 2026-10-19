@@ -1564,6 +1564,33 @@ The room is also really crowded, so we need to wait to see it.
         self.assertEqual(result["item"]["last_result"], "pass")
         self.assertEqual(saved[0]["next_due"], "2026-07-07")
 
+    def test_next_review_is_saved_once_without_marking_the_item_mastered(self):
+        web_server = load_web_server()
+        item = {"id": "word", "item": "word", "next_due": "2026-10-18", "interval_days": 7, "last_result": "shaky", "status": "needs_review", "history": []}
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state_path = Path(tmpdir) / "review-items.json"
+            state_path.write_text(json.dumps([item]), encoding="utf-8")
+            for _ in range(2):
+                web_server.record_review_result("word", "reviewed", "2026-10-19", state_path=state_path, event_id="session-word")
+            saved = json.loads(state_path.read_text(encoding="utf-8"))[0]
+        self.assertEqual(len(saved["history"]), 1)
+        self.assertEqual(saved["history"][0]["result"], "reviewed")
+        self.assertEqual(saved["last_result"], "shaky")
+        self.assertEqual(saved["status"], "needs_review")
+        self.assertEqual(saved["interval_days"], 7)
+        self.assertEqual(saved["next_due"], "2026-10-20")
+
+    def test_finishing_a_local_course_records_one_round_per_event(self):
+        web_server = load_web_server()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            courses_path = Path(tmpdir) / "courses.json"
+            courses_path.write_text(json.dumps([{"id": "course", "title": "Course"}]), encoding="utf-8")
+            for _ in range(2):
+                web_server.record_full_course_review("course", "2026-10-19", "round-1", courses_path=courses_path)
+            saved = json.loads(courses_path.read_text(encoding="utf-8"))[0]
+        self.assertEqual(len(saved["full_review_events"]), 1)
+        self.assertEqual(saved["full_review_events"][0]["completed_on"], "2026-10-19")
+
     def test_render_report_summarizes_checkins_and_weak_items(self):
         coach = load_coach()
         checkins = [
