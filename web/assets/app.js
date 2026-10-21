@@ -32,6 +32,7 @@ const state = {
   vocabularyWorkspace: null,
   localWorkspace: null,
   vocabularyLimit: 20,
+  vocabularyReview: null,
   sessionKind: "course",
   reviewSaving: false,
   reviewGeneration: 0,
@@ -251,9 +252,9 @@ function courseCardsForMode(course, mode) {
 
 function reviewModeMeta(mode) {
   if (mode === "vocabulary") return {
-    label: "WORDS & PHRASES", description: "先回忆英文表达，再查看释义、用法与例句。此分组单独记录掌握程度。",
-    completeLabel: "本组表达复习完成", emptyTitle: "本组表达复习完成",
-    emptyDescription: "根据刚才记录的掌握程度安排下次复习。可以返回词库继续学习其他表达。",
+    label: "WORDS & PHRASES", description: "每组最多 30 个表达。先回忆英文，再查看用法与例句；点击下一个即可保存一次复习。",
+    completeLabel: "本轮表达复习完成", emptyTitle: "本轮表达复习完成",
+    emptyDescription: "复习记录已保存，掌握程度可单独评分。",
   };
   const normalizedMode = normalizeReviewMode(mode);
   if (normalizedMode === "selected") {
@@ -605,11 +606,23 @@ function updateVocabularyLibrary(value) {
   renderVocabulary();
 }
 
-function filteredVocabulary() {
-  return vocabulary.filterEntries(vocabulary.entries(state.vocabularyWorkspace), {
+function vocabularyFilterOptions() {
+  return {
     query: $("vocabularySearch").value, kind: $("vocabularyKind").value,
     courseId: $("vocabularySource").value, dueOnly: $("vocabularyDueOnly").checked, date: selectedDate(),
-  });
+  };
+}
+
+function filteredVocabulary() {
+  return vocabulary.filterEntries(vocabulary.entries(state.vocabularyWorkspace), vocabularyFilterOptions());
+}
+
+function vocabularyReviewCandidates(review) {
+  if (!review || review.mode === "single") return [];
+  const completed = new Set(review.completedIds);
+  return vocabulary.filterEntries(vocabulary.entries(state.vocabularyWorkspace), {
+    ...review.filters, date: selectedDate(), dueOnly: review.mode === "due" || review.filters.dueOnly,
+  }).filter(item => !completed.has(item.id));
 }
 
 function vocabularyTeachingHtml(item, { showEnglish = false } = {}) {
@@ -645,25 +658,33 @@ function renderVocabulary() {
 function filterVocabulary() { state.vocabularyLimit = 20; renderVocabulary(); }
 function showMoreVocabulary() { state.vocabularyLimit += 20; renderVocabulary(); }
 
-function startVocabularyReview(mode, itemId = "") {
+function startVocabularyReview(mode, itemId = "", continuation = null) {
+  const review = continuation || { mode, filters: vocabularyFilterOptions(), completedIds: [], batchNumber: 1 };
   const items = mode === "single" ? vocabulary.entries(state.vocabularyWorkspace).filter(item => item.id === itemId)
-    : filteredVocabulary().filter(item => mode !== "due" || item.next_due <= selectedDate());
+    : vocabulary.reviewBatch(vocabularyReviewCandidates(review), { date: selectedDate() });
   if (!items.length) return;
   closeCourseReview();
+  state.vocabularyReview = review;
   state.sessionKind = "vocabulary";
   state.selectedCourseId = vocabulary.GROUP_ID;
   state.sessionMode = "vocabulary";
   state.sessionCards = items.map(workspace.reviewCard);
   state.sessionInitialCount = items.length;
   state.reviewSessionId = newFullReviewCompletionEventId();
-  $("activeCourseTitle").textContent = "单词与短语 · 独立复习";
-  $("activeCourseSummary").textContent = "练习对应的英文表达，记录自己是否真正掌握了意思和用法。";
+  $("activeCourseTitle").textContent = mode === "single" ? "单词与短语 · 单条练习" : `单词与短语 · 第 ${review.batchNumber} 组`;
+  $("activeCourseSummary").textContent = `本轮 ${items.length} 个表达${mode === "single" ? "" : "，每组最多 30 个；完成后可继续下一组。"}`;
   $("sessionLabel").textContent = "WORDS & PHRASES";
   $("reviewModeDescription").textContent = reviewModeMeta("vocabulary").description;
   $("reviewCoreBadge").hidden = true;
   $("courseReviewWorkspace").hidden = false;
   renderActiveCard();
   $("courseReviewWorkspace").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function continueVocabularyReview() {
+  if (state.reviewSaving || state.sessionCards.length || !state.vocabularyReview) return;
+  const review = state.vocabularyReview;
+  startVocabularyReview(review.mode, "", { ...review, batchNumber: review.batchNumber + 1 });
 }
 
 function toggleCourse(courseId) {
@@ -710,6 +731,7 @@ function closeCourseReview() {
   state.fullReviewCompletionEventId = "";
   state.fullReviewCompletionRecorded = false;
   state.sessionKind = "course";
+  state.vocabularyReview = null;
   $("vocabularyExplanation").hidden = true;
   $("courseReviewWorkspace").hidden = true;
 }
@@ -745,6 +767,21 @@ function renderActiveCard() {
   $("reviewPositionText").textContent = empty ? `${state.sessionInitialCount} / ${state.sessionInitialCount}` : `${state.currentReviewIndex + 1} / ${state.sessionCards.length}`;
   $("reviewEmptyTitle").textContent = modeMeta.emptyTitle;
   $("reviewEmptyDescription").textContent = modeMeta.emptyDescription;
+  $("vocabularyNextBatchButton").hidden = true;
+  if (state.sessionKind === "vocabulary") {
+    $("reviewPositionText").textContent = `${empty ? state.sessionInitialCount : completedInSession + 1} / ${state.sessionInitialCount}`;
+    if (empty) {
+      const remaining = vocabularyReviewCandidates(state.vocabularyReview).length;
+      $("reviewEmptyTitle").textContent = `本轮 ${state.sessionInitialCount} 个表达已复习完成`;
+      $("reviewEmptyDescription").textContent = remaining
+        ? `复习记录已保存，还有 ${remaining} 个表达。可以休息一下，再继续下一组。`
+        : state.vocabularyReview?.mode === "single"
+          ? "本条复习记录已保存，可以返回词库选择其他表达。"
+          : "复习记录已保存，当前分组已全部完成。";
+      $("vocabularyNextBatchButton").hidden = !remaining;
+      $("vocabularyNextBatchButton").textContent = `继续下一组（${Math.min(vocabulary.REVIEW_BATCH_SIZE, remaining)} 个）`;
+    }
+  }
   updateReviewNavigation();
   if (!card) return;
   resetCardFeedback();
@@ -760,6 +797,7 @@ function updateReviewNavigation() {
   $("nextReviewButton").disabled = state.reviewSaving || !activeCard();
   $("nextReviewButton").textContent = state.reviewSaving ? "保存中…"
     : state.sessionCards.length === 1 ? "完成本轮 ✓" : "下一个 →";
+  $("vocabularyNextBatchButton").disabled = state.reviewSaving;
   document.querySelectorAll(".grade-button").forEach(button => {
     button.disabled = state.reviewSaving || !activeCard();
   });
@@ -881,6 +919,9 @@ async function saveCurrentReview(result) {
     if (generation !== state.reviewGeneration) return;
     if (!await maybeRecordFullContentCompletion()) return;
     if (generation !== state.reviewGeneration) return;
+    if (state.sessionKind === "vocabulary" && state.vocabularyReview) {
+      state.vocabularyReview.completedIds.push(card.id);
+    }
     const index = state.sessionCards.findIndex(item => item.id === card.id);
     if (index >= 0) state.sessionCards.splice(index, 1);
     state.currentReviewIndex = Math.min(state.currentReviewIndex, Math.max(0, state.sessionCards.length - 1));

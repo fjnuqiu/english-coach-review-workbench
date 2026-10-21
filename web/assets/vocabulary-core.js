@@ -1,6 +1,7 @@
 (function initVocabulary(root) {
   "use strict";
   const GROUP_ID = "__english_coach_vocabulary__";
+  const REVIEW_BATCH_SIZE = 30;
   const SPELLING_VARIANTS = {
     customize: ["customise"], customized: ["customised"],
     favorite: ["favourite"], favourite: ["favorite"],
@@ -136,5 +137,25 @@
       && (!search || normalize(`${item.item} ${item.meaning} ${item.usage} ${item.example} ${item.example_zh}`).includes(search)));
   }
 
-  root.EnglishCoachVocabulary = { GROUP_ID, withLibrary, courseWorkspace, entries, filterEntries, isStandalone, normalize };
+  function reviewBatch(items, { date, excludedIds = [] } = {}) {
+    const excluded = new Set(excludedIds);
+    // Saved history keeps a newly opened round from always starting at A.
+    // Within due/future cards, favour the least reviewed expressions first.
+    return items.filter(item => !excluded.has(item.id)).sort((a, b) => {
+      const dueA = String(a.next_due || "9999-12-31") <= date;
+      const dueB = String(b.next_due || "9999-12-31") <= date;
+      const historyA = Array.isArray(a.history) ? a.history : [];
+      const historyB = Array.isArray(b.history) ? b.history : [];
+      const latest = history => history.reduce((last, event) => {
+        const stamp = event?.synced_at || event?.reviewed_at || event?.date || "";
+        return stamp > last ? stamp : last;
+      }, "");
+      return Number(dueB) - Number(dueA)
+        || historyA.length - historyB.length
+        || latest(historyA).localeCompare(latest(historyB))
+        || a.item.localeCompare(b.item, "en");
+    }).slice(0, REVIEW_BATCH_SIZE);
+  }
+
+  root.EnglishCoachVocabulary = { GROUP_ID, REVIEW_BATCH_SIZE, withLibrary, courseWorkspace, entries, filterEntries, reviewBatch, isStandalone, normalize };
 })(typeof globalThis !== "undefined" ? globalThis : this);

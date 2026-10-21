@@ -4,7 +4,9 @@ import vm from "node:vm";
 import test from "node:test";
 
 await import("../web/assets/workspace-core.js");
+await import("../web/assets/vocabulary-core.js");
 const workspace = globalThis.EnglishCoachWorkspace;
+const vocabulary = globalThis.EnglishCoachVocabulary;
 const app = await readFile(new URL("../web/assets/app.js", import.meta.url), "utf8");
 // Exercise the production handlers without starting account/network initialization.
 const handlers = app.slice(0, app.lastIndexOf("\ninitialize().catch("));
@@ -13,19 +15,20 @@ function fixture({ kind = "course", mode = "full", count = 2, local = false, sav
   const nodes = new Map();
   const node = id => {
     if (!nodes.has(id)) nodes.set(id, {
-      value: id === "reviewDateInput" ? "2026-10-19" : "", style: {},
+      value: id === "reviewDateInput" ? "2026-10-19" : ["vocabularyKind", "vocabularySource"].includes(id) ? "all" : "", style: {},
       classList: { add() {}, remove() {}, toggle() {} }, scrollIntoView() {},
     });
     return nodes.get(id);
   };
   const grades = [node("pass"), node("shaky"), node("fail")];
   const calls = { items: [], courses: [], local: [], toasts: [], refreshes: 0 };
-  const items = Array.from({ length: count }, (_, i) => ({ id: `card-${i}`, course_id: "lesson", item: `Example ${i}`, prompt: `中文 ${i}`, interval_days: 1, next_due: "2026-10-19", last_result: "pending", history: [] }));
-  const course = { id: "lesson", title: "Fixture", card_ids: items.map(item => item.id) };
+  const courseId = kind === "vocabulary" ? vocabulary.GROUP_ID : "lesson";
+  const items = Array.from({ length: count }, (_, i) => ({ id: `card-${i}`, course_id: courseId, item: `Example ${i}`, prompt: `中文 ${i}`, interval_days: 1, next_due: "2026-10-19", last_result: "pending", history: [] }));
+  const course = { id: courseId, title: "Fixture", card_ids: items.map(item => item.id) };
   const context = vm.createContext({
     window: {
       EnglishCoachWorkspace: workspace,
-      EnglishCoachVocabulary: { GROUP_ID: "vocabulary" },
+      EnglishCoachVocabulary: vocabulary,
       EnglishCoachCloud: {
         async saveReviewItem(userId, item) {
           calls.items.push(structuredClone(item));
@@ -43,19 +46,23 @@ function fixture({ kind = "course", mode = "full", count = 2, local = false, sav
     fixtureApi: async (path, options) => { calls.local.push({ path, body: JSON.parse(options.body) }); },
   });
   vm.runInContext(handlers + `
-    refreshDashboard = fixtureRefresh;
+    refreshDashboard = async () => {
+      await fixtureRefresh();
+      state.vocabularyWorkspace = { courses: state.cloudCourses, review_items: state.cloudReviewItems };
+    };
     showToast = fixtureToast;
     apiJson = fixtureApi;
     scheduleCloudSync = () => {};
     renderCourses = () => {};
-    globalThis.frontend = { state, goToNextReviewCard, submitReviewResult, renderActiveCard, startCourseReview, closeCourseReview };
+    globalThis.frontend = { state, goToNextReviewCard, submitReviewResult, renderActiveCard, startCourseReview, closeCourseReview, startVocabularyReview, continueVocabularyReview };
   `, context);
   const frontend = context.frontend;
   Object.assign(frontend.state, {
     user: { id: "fixture-user" }, localBackendAvailable: local,
     cloudCourses: [course], cloudReviewItems: items,
     localWorkspace: { courses: [course], review_items: items },
-    sessionKind: kind, sessionMode: mode, selectedCourseId: "lesson",
+    vocabularyWorkspace: { courses: [course], review_items: items },
+    sessionKind: kind, sessionMode: mode, selectedCourseId: courseId,
     sessionCards: items.map(workspace.reviewCard), currentReviewIndex: 0,
     sessionInitialCount: count, reviewSessionId: "fixture-session", fullReviewCompletionEventId: "fixture-round",
     dashboard: workspace.dashboardFromWorkspace([course], items, "2026-10-19"),
@@ -143,4 +150,59 @@ test("Next works for independent vocabulary and local courses without creating f
   assert.equal(local.calls.local[0].body.result, "reviewed");
   assert.ok(local.calls.local[0].body.event_id);
   assert.equal(local.state.sessionCards.length, 1);
+});
+
+test("vocabulary completes 30/30/1 batches without repeats or a false full-course round", async () => {
+  const view = fixture({ kind: "vocabulary", mode: "vocabulary", count: 61 });
+  view.startVocabularyReview("filtered");
+  assert.equal(view.state.sessionCards.length, 30);
+  assert.equal(view.node("reviewPositionText").textContent, "1 / 30");
+  view.continueVocabularyReview();
+  assert.equal(view.state.sessionCards.length, 30);
+  const seen = new Set();
+  for (const batchSize of [30, 30, 1]) {
+    assert.equal(view.state.sessionInitialCount, batchSize);
+    while (view.state.sessionCards.length) {
+      const id = view.state.sessionCards[0].id;
+      assert.ok(!seen.has(id), id);
+      seen.add(id);
+      await view.goToNextReviewCard();
+    }
+    assert.equal(view.node("reviewEmptyState").hidden, false);
+    assert.equal(view.node("reviewPositionText").textContent, `${batchSize} / ${batchSize}`);
+    assert.equal(view.node("vocabularyNextBatchButton").hidden, seen.size === 61);
+    if (seen.size < 61) view.continueVocabularyReview();
+  }
+  view.continueVocabularyReview();
+  assert.equal(view.state.sessionCards.length, 0);
+  assert.equal(view.calls.items.length, 61);
+  assert.equal(view.calls.courses.length, 0);
+  assert.ok(view.state.cloudReviewItems.every(item => item.history.length === 1));
+});
+
+test("reopening vocabulary uses saved progress instead of restarting the first batch", async () => {
+  const view = fixture({ kind: "vocabulary", mode: "vocabulary", count: 65 });
+  view.startVocabularyReview("filtered");
+  const first = new Set(view.state.sessionCards.map(card => card.id));
+  while (view.state.sessionCards.length) await view.goToNextReviewCard();
+  view.closeCourseReview();
+  view.startVocabularyReview("filtered");
+  assert.equal(view.state.sessionCards.length, 30);
+  assert.ok(view.state.sessionCards.every(card => !first.has(card.id)));
+});
+
+test("batching respects search and due filters while single-item and course practice retain their size", () => {
+  const view = fixture({ kind: "vocabulary", mode: "vocabulary", count: 65 });
+  view.state.vocabularyWorkspace.review_items[0].next_due = "2026-10-20";
+  view.node("vocabularySearch").value = "Example 0";
+  view.startVocabularyReview("due");
+  assert.equal(view.state.vocabularyReview, null);
+  view.node("vocabularySearch").value = "Example 6";
+  view.startVocabularyReview("filtered");
+  assert.equal(view.state.sessionCards.length, 6);
+  view.startVocabularyReview("single", "card-0");
+  assert.equal(view.state.sessionCards.length, 1);
+  const course = fixture({ count: 65 });
+  course.startCourseReview("lesson", "full");
+  assert.equal(course.state.sessionCards.length, 65);
 });

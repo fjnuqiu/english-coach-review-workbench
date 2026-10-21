@@ -160,3 +160,29 @@ test("standalone vocabulary rejects changed meanings even when the root matches"
   const favorite = vocabulary.entries(vocabulary.withLibrary(seed)).find(item => item.item === "favourite");
   assert.ok(favorite.accepted_answers.includes("favorite"));
 });
+
+test("a vocabulary round caps a large library at 30 and advances from saved reviews", () => {
+  const library = vocabulary.withLibrary(seed);
+  const before = structuredClone(library);
+  const first = vocabulary.reviewBatch(vocabulary.entries(library), { date: "2026-10-21" });
+  assert.equal(first.length, 30);
+  assert.deepEqual(library, before);
+  let reviewed = library.review_items;
+  for (const item of first) reviewed = workspace.recordReviewResult(reviewed, item.id, "reviewed", "2026-10-21");
+  const reloaded = vocabulary.withLibrary({ ...library, review_items: reviewed });
+  const next = vocabulary.reviewBatch(vocabulary.entries(reloaded), { date: "2026-10-21" });
+  assert.equal(next.length, 30);
+  assert.ok(next.every(item => !first.some(prior => prior.id === item.id)));
+});
+
+test("batch selection favours due and least-reviewed cards, respects exclusions, and permits short final groups", () => {
+  const items = [
+    { id: "future", item: "A", next_due: "2026-11-01", history: [] },
+    { id: "old", item: "B", next_due: "2026-10-20", history: [{ date: "2026-10-01" }] },
+    { id: "new", item: "C", next_due: "2026-10-21", history: [] },
+    { id: "recent", item: "D", next_due: "2026-10-21", history: [{ date: "2026-10-19" }] },
+  ];
+  assert.deepEqual(vocabulary.reviewBatch(items, { date: "2026-10-21" }).map(item => item.id), ["new", "old", "recent", "future"]);
+  assert.deepEqual(vocabulary.reviewBatch(items, { date: "2026-10-21", excludedIds: ["new", "old", "recent"] }).map(item => item.id), ["future"]);
+  assert.deepEqual(vocabulary.reviewBatch([], { date: "2026-10-21" }), []);
+});

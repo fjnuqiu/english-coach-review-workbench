@@ -108,9 +108,10 @@
         <label class="due-filter"><input id="vocabularyDueOnly" type="checkbox" onchange="filterVocabulary()">只看待复习</label>
       </div>
       <div class="vocabulary-actions"><p id="vocabularyResultCount" role="status"></p><div class="action-row">
-        <button class="button secondary" id="vocabularyDueButton" type="button" onclick="startVocabularyReview('due')">复习到期表达</button>
-        <button class="button primary" id="vocabularyPracticeButton" type="button" onclick="startVocabularyReview('filtered')">练习当前分组</button>
+        <button class="button secondary" id="vocabularyDueButton" type="button" onclick="startVocabularyReview('due')">复习到期表达（每组 30 个）</button>
+        <button class="button primary" id="vocabularyPracticeButton" type="button" onclick="startVocabularyReview('filtered')">练习下一组（最多 30 个）</button>
       </div></div>
+      <p class="vocabulary-notice">每组最多 30 个，优先安排到期和复习次数较少的表达；不足 30 个时按实际数量开始。</p>
       <p class="vocabulary-notice" id="vocabularyNotice"></p>
       <div id="vocabularyList" class="vocabulary-list"></div>
       <button class="button quiet vocabulary-more" id="vocabularyMoreButton" type="button" onclick="showMoreVocabulary()" hidden>显示更多表达</button>
@@ -138,6 +139,7 @@
       <div class="review-empty" id="reviewEmptyState" hidden>
         <strong id="reviewEmptyTitle">Today's review is complete</strong>
         <p id="reviewEmptyDescription">Your next review is scheduled from the results you recorded.</p>
+        <button class="button primary" id="vocabularyNextBatchButton" type="button" onclick="continueVocabularyReview()" hidden>继续下一组</button>
       </div>
 
       <div class="review-card" id="reviewCard">
