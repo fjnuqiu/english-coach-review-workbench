@@ -50,7 +50,7 @@
 .vocabulary-meaning { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .vocabulary-term { min-width: 0; overflow-wrap: anywhere; }
 .vocabulary-term strong { font-size: 20px; font-weight: 700; }
-.vocabulary-pronunciation { display: block; margin-top: 4px; color: var(--muted); font-size: 13px; font-weight: 400; }
+.vocabulary-meta { display: inline; margin-left: 12px; color: var(--muted); font-size: 14px; font-weight: 400; line-height: 1.8; overflow-wrap: anywhere; }
 .vocabulary-kind { flex-shrink: 0; font-size: 11px; border: 1px solid #c6dfd4; color: var(--green-dark); border-radius: 5px; padding: 2px 7px; }
 .vocabulary-entry-body { padding: 0 24px 22px; }
 .vocabulary-step { border-top: 1px solid var(--line); padding: 16px 0; display: grid; grid-template-columns: 80px 1fr; gap: 16px; }

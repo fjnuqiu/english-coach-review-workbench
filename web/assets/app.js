@@ -625,10 +625,15 @@ function vocabularyReviewCandidates(review) {
   }).filter(item => !completed.has(item.id));
 }
 
+function vocabularyMetaHtml(item) {
+  const fields = [item.part_of_speech, item.pronunciation].filter(Boolean);
+  return fields.length ? `<span class="vocabulary-meta">${fields.map(escapeHtml).join(" · ")}</span>` : "";
+}
+
 function vocabularyTeachingHtml(item, { showEnglish = false } = {}) {
   const firstStep = showEnglish
-    ? `<div class="vocabulary-term"><strong lang="en">${escapeHtml(item.item)}</strong>${item.pronunciation ? `<span class="vocabulary-pronunciation">${escapeHtml(item.pronunciation)}</span>` : ""}</div>`
-    : `<p>${escapeHtml(item.meaning)}</p>`;
+    ? `<div class="vocabulary-term"><strong lang="en">${escapeHtml(item.item)}</strong></div>`
+    : `<p>${escapeHtml(item.meaning)}${vocabularyMetaHtml(item)}</p>`;
   return `<section class="vocabulary-step"><h3><span>01</span>${showEnglish ? "英语" : "意思"}</h3>${firstStep}</section>
     <section class="vocabulary-step"><h3><span>02</span>怎么用</h3><p>${escapeHtml(item.usage)}</p></section>
     <section class="vocabulary-step"><h3><span>03</span>例句</h3><div><p class="example-english" lang="en">${escapeHtml(item.example)}</p><p class="example-chinese">${escapeHtml(item.example_zh)}</p></div></section>`;
@@ -645,7 +650,7 @@ function renderVocabulary() {
   $("vocabularyMoreButton").hidden = items.length <= state.vocabularyLimit;
   $("vocabularyList").innerHTML = visibleItems.map(item => `
     <details class="vocabulary-entry" data-vocab-entry="${escapeHtml(item.id)}"${openIds.has(item.id) ? " open" : ""}>
-      <summary><strong class="vocabulary-meaning">${escapeHtml(item.meaning)}</strong><span class="vocabulary-kind">${({ word: "单词", phrase: "短语", expression: "表达/句型" })[item.kind] || "表达"}</span></summary>
+      <summary><strong class="vocabulary-meaning">${escapeHtml(item.meaning)}${vocabularyMetaHtml(item)}</strong><span class="vocabulary-kind">${({ word: "单词", phrase: "短语", expression: "表达/句型" })[item.kind] || "表达"}</span></summary>
       <div class="vocabulary-entry-body">${vocabularyTeachingHtml(item, { showEnglish: true })}
         <div class="vocabulary-entry-footer"><p class="vocabulary-source">来源：${(item.source_courses || []).map(c => escapeHtml(c.title)).join(" · ")}</p>
           <div class="action-row"><button class="button quiet" type="button" data-vocab-action="speak" data-vocab-id="${escapeHtml(item.id)}" aria-label="播放 ${escapeHtml(item.item)} 发音">▶ 发音</button>
@@ -789,7 +794,9 @@ function renderActiveCard() {
   $("reviewPromptLabel").textContent = isVocabulary ? "释义 · 回忆对应的英文表达" : "Chinese prompt";
   $("answerInput").placeholder = isVocabulary ? "输入对应的单词、短语或句子，再查看用法和例句。" : "Type your English, or record yourself saying the full sentence.";
   $("vocabularyExplanation").hidden = true;
-  $("reviewPrompt").textContent = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
+  const prompt = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
+  if (isVocabulary) $("reviewPrompt").innerHTML = `${escapeHtml(prompt)}${vocabularyMetaHtml(card)}`;
+  else $("reviewPrompt").textContent = prompt;
 }
 
 function updateReviewNavigation() {

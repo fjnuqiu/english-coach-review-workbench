@@ -5,6 +5,7 @@ await import("../web/assets/workspace-core.js");
 await import("../web/assets/video-course-seed.js");
 await import("../web/assets/vocabulary-guides.js");
 await import("../web/assets/doubao-vocabulary-seed.js");
+await import("../web/assets/vocabulary-metadata.js");
 await import("../web/assets/vocabulary-core.js");
 const vocabulary = globalThis.EnglishCoachVocabulary;
 const workspace = globalThis.EnglishCoachWorkspace;
@@ -185,4 +186,63 @@ test("batch selection favours due and least-reviewed cards, respects exclusions,
   assert.deepEqual(vocabulary.reviewBatch(items, { date: "2026-10-21" }).map(item => item.id), ["new", "old", "recent", "future"]);
   assert.deepEqual(vocabulary.reviewBatch(items, { date: "2026-10-21", excludedIds: ["new", "old", "recent"] }).map(item => item.id), ["future"]);
   assert.deepEqual(vocabulary.reviewBatch([], { date: "2026-10-21" }), []);
+});
+
+test("every bundled word and phrase has pronunciation and sense-specific grammatical labels", () => {
+  const entries = vocabulary.entries(vocabulary.withLibrary(seed));
+  const lexical = entries.filter(item => item.kind !== "expression");
+  assert.equal(lexical.length, 889);
+  for (const item of lexical) {
+    assert.match(item.pronunciation, /\/[^/]+\//, `${item.item}: IPA`);
+    assert.ok(item.part_of_speech?.trim(), `${item.item}: part of speech`);
+  }
+  for (const sentence of entries.filter(item => item.kind === "expression")) {
+    assert.equal(sentence.part_of_speech, "", `${sentence.item}: sentences are not single words`);
+  }
+  const find = term => entries.find(item => item.item === term);
+  assert.equal(find("accompany").part_of_speech, "vt. 及物动词");
+  assert.equal(find("arrive").part_of_speech, "vi. 不及物动词");
+  assert.equal(find("calling").part_of_speech, "n. 名词");
+  assert.equal(find("net").part_of_speech, "adj. 形容词");
+  assert.equal(find("look forward to").part_of_speech, "动词短语");
+  assert.equal(find("litter box").part_of_speech, "名词短语");
+  assert.equal(find("Take care!").part_of_speech, "句型/固定表达");
+});
+
+test("metadata covers course guides outside the bundled course set and reaches actual review cards", () => {
+  const guides = globalThis.EnglishCoachVocabularyGuides;
+  const value = vocabulary.withLibrary({
+    courses: [{ id: "all-guides", title: "All guides" }],
+    review_items: guides.map((guide, index) => ({ id: `guide-${index}`, course_id: "all-guides", item: guide.term })),
+  });
+  const entries = vocabulary.entries(value);
+  for (const guide of guides) {
+    const entry = entries.find(item => vocabulary.normalize(item.item) === vocabulary.normalize(guide.term));
+    assert.ok(entry?.part_of_speech, guide.term);
+    assert.ok(entry?.pronunciation, guide.term);
+    const card = workspace.reviewCard(entry);
+    assert.equal(card.part_of_speech, entry.part_of_speech);
+    assert.equal(card.pronunciation, entry.pronunciation);
+    assert.equal(card.prompt_sentence, entry.meaning);
+  }
+  const live = entries.find(item => item.item === "live");
+  assert.match(live.pronunciation, /lɪv/);
+  assert.match(live.pronunciation, /laɪv/);
+  const close = entries.find(item => item.item === "close");
+  assert.match(close.pronunciation, /kləʊs/);
+  assert.match(close.pronunciation, /kləʊz/);
+});
+
+test("private guide metadata is retained and lexical enrichment keeps existing review identities and progress", () => {
+  const guide = { term: "private term", kind: "phrase", meaning: "私有术语", usage: "私有用法", example: "Use this private term.", example_zh: "使用这个私有术语。", pronunciation: "/ˈpraɪvət tɜːm/", part_of_speech: "名词短语" };
+  const value = vocabulary.withLibrary({ courses: [{ id: "private" }], review_items: [{ id: "private-card", course_id: "private", vocabulary: [guide] }] });
+  const entry = vocabulary.entries(value).find(item => item.item === guide.term);
+  assert.equal(entry.pronunciation, guide.pronunciation);
+  assert.equal(entry.part_of_speech, guide.part_of_speech);
+  const reviewed = { ...value, review_items: workspace.recordReviewResult(value.review_items, entry.id, "reviewed", "2026-10-22", "2026-10-22T03:00:00Z", "metadata-check") };
+  const before = reviewed.review_items.find(item => item.id === entry.id);
+  const after = vocabulary.entries(vocabulary.withLibrary(reviewed)).find(item => item.id === entry.id);
+  assert.equal(after.id, before.id);
+  assert.equal(after.next_due, before.next_due);
+  assert.deepEqual(after.history, before.history);
 });

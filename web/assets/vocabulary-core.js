@@ -16,6 +16,7 @@
   const normalize = (value) => String(value || "").normalize("NFKC").toLowerCase()
     .replace(/[’‘]/g, "'").replace(/[‐–—]/g, "-").replace(/[.!?,;:]+$/g, "").replace(/\s+/g, " ").trim();
   const supplements = root.EnglishCoachDoubaoVocabulary?.entries || [];
+  const lexicalMetadata = root.EnglishCoachVocabularyMetadata || {};
   const guides = [...(root.EnglishCoachVocabularyGuides || []), ...supplements];
   const byExpression = new Map();
   for (const guide of guides) {
@@ -90,13 +91,15 @@
     const items = [...collected.entries()].map(([key, { guide, sources }]) => {
       const id = `vocab:${encodeURIComponent(key)}`;
       const existing = previousItems.get(id) || {};
+      const metadata = lexicalMetadata[key] || {};
       return {
         ...existing,
         id, course_id: GROUP_ID, type: "vocabulary", item: guide.term,
         kind: guide.kind || (guide.term.split(/\s+/).length === 1 ? "word" : "phrase"),
         prompt: guide.meaning, meaning: guide.meaning, usage: guide.usage,
         example: guide.example, example_zh: guide.example_zh,
-        pronunciation: guide.pronunciation || "",
+        pronunciation: guide.pronunciation || metadata.pronunciation || existing.pronunciation || "",
+        part_of_speech: guide.part_of_speech || metadata.part_of_speech || existing.part_of_speech || "",
         source: "Words & phrases", source_courses: [...sources.values()],
         accepted_answers: guide.accepted_answers || SPELLING_VARIANTS[key] || [],
         status: existing.status || "new", last_result: existing.last_result || "pending",
@@ -134,7 +137,7 @@
       && (courseId === "all" || item.source_courses?.some(c => c.course_id === courseId
         || (courseId === "notes:doubao:all" && c.source_type === "notes")))
       && (!dueOnly || String(item.next_due || "9999-12-31") <= date)
-      && (!search || normalize(`${item.item} ${item.meaning} ${item.usage} ${item.example} ${item.example_zh}`).includes(search)));
+      && (!search || normalize(`${item.item} ${item.meaning} ${item.part_of_speech || ""} ${item.usage} ${item.example} ${item.example_zh}`).includes(search)));
   }
 
   function reviewBatch(items, { date, excludedIds = [] } = {}) {

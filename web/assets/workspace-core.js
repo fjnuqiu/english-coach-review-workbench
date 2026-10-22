@@ -141,6 +141,7 @@
       source: item?.source || "",
       ...(item?.type === "vocabulary" ? {
         type: "vocabulary", kind: item.kind, meaning: item.meaning, usage: item.usage,
+        pronunciation: item.pronunciation || "", part_of_speech: item.part_of_speech || "",
         example_zh: item.example_zh, source_courses: clone(item.source_courses || []),
       } : {}),
     };
