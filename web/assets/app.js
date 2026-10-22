@@ -795,8 +795,7 @@ function renderActiveCard() {
   $("answerInput").placeholder = isVocabulary ? "输入对应的单词、短语或句子，再查看用法和例句。" : "Type your English, or record yourself saying the full sentence.";
   $("vocabularyExplanation").hidden = true;
   const prompt = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
-  if (isVocabulary) $("reviewPrompt").innerHTML = `${escapeHtml(prompt)}${vocabularyMetaHtml(card)}`;
-  else $("reviewPrompt").textContent = prompt;
+  $("reviewPrompt").textContent = prompt;
 }
 
 function updateReviewNavigation() {

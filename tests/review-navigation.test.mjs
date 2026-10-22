@@ -54,7 +54,7 @@ function fixture({ kind = "course", mode = "full", count = 2, local = false, sav
     apiJson = fixtureApi;
     scheduleCloudSync = () => {};
     renderCourses = () => {};
-    globalThis.frontend = { state, goToNextReviewCard, submitReviewResult, renderActiveCard, startCourseReview, closeCourseReview, startVocabularyReview, continueVocabularyReview, renderVocabulary, vocabularyTeachingHtml };
+    globalThis.frontend = { state, goToNextReviewCard, submitReviewResult, renderActiveCard, startCourseReview, closeCourseReview, startVocabularyReview, continueVocabularyReview, renderVocabulary, vocabularyTeachingHtml, revealReviewAnswer };
   `, context);
   const frontend = context.frontend;
   Object.assign(frontend.state, {
@@ -207,17 +207,21 @@ test("batching respects search and due filters while single-item and course prac
   assert.equal(course.state.sessionCards.length, 65);
 });
 
-test("Chinese meaning carries escaped grammatical labels and IPA in both the library and review prompt", () => {
+test("recall prompt stays Chinese-only while revealed meaning retains escaped grammatical labels and IPA", () => {
   const view = fixture({ kind: "vocabulary", mode: "vocabulary", count: 1 });
   const details = { meaning: "陪同", pronunciation: "/əˈkʌmpəni/", part_of_speech: "vt. 及物动词 <tag>" };
   Object.assign(view.state.vocabularyWorkspace.review_items[0], details);
   Object.assign(view.state.sessionCards[0], details, { prompt_sentence: "陪同" });
   view.renderActiveCard();
-  assert.match(view.node("reviewPrompt").innerHTML, /^陪同<span class="vocabulary-meta">/);
-  assert.match(view.node("reviewPrompt").innerHTML, /vt\. 及物动词 &lt;tag&gt; · \/əˈkʌmpəni\//);
+  assert.equal(view.node("reviewPrompt").textContent, "陪同");
+  assert.equal(view.node("vocabularyExplanation").hidden, true);
   view.renderVocabulary();
   assert.match(view.node("vocabularyList").innerHTML, /<strong class="vocabulary-meaning">陪同<span class="vocabulary-meta">/);
-  const explanation = view.vocabularyTeachingHtml(details);
-  assert.match(explanation, /陪同<span class="vocabulary-meta">/);
-  assert.doesNotMatch(view.node("reviewPrompt").innerHTML, /Example 0|<tag>/);
+  view.revealReviewAnswer();
+  assert.equal(view.node("vocabularyExplanation").hidden, false);
+  assert.match(view.node("vocabularyExplanation").innerHTML, /陪同<span class="vocabulary-meta">vt\. 及物动词 &lt;tag&gt; · \/əˈkʌmpəni\//);
+  assert.equal(view.node("reviewPrompt").textContent, "陪同");
+  view.renderActiveCard();
+  assert.equal(view.node("vocabularyExplanation").hidden, true);
+  assert.equal(view.node("reviewPrompt").textContent, "陪同");
 });
