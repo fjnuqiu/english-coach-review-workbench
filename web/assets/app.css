@@ -31,6 +31,22 @@
 .workspace-nav button[aria-pressed="true"] { background: var(--green-soft); color: var(--green-dark); border-color: #bad8ca; }
 .workspace-nav span { margin-left: 6px; padding: 2px 7px; border-radius: 12px; background: #fff; font-size: 12px; }
 .vocabulary-summary { color: var(--green-dark); white-space: nowrap; font-weight: 700; }
+.vocabulary-groups { margin: 22px 0; padding: 20px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.vocabulary-groups-heading { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; }
+.vocabulary-groups-heading h2 { margin: 0; font-size: 19px; }
+.vocabulary-groups-heading p { margin: 0; color: var(--muted); font-size: 13px; }
+.vocabulary-group-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.vocabulary-group-filters button { border: 1px solid var(--line); border-radius: 7px; padding: 8px 12px; background: var(--surface-soft); color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.vocabulary-group-filters button[aria-pressed="true"] { background: var(--green-soft); color: var(--green-dark); border-color: #bad8ca; font-weight: 700; }
+.vocabulary-group-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; max-height: 310px; overflow-y: auto; }
+.vocabulary-group { display: grid; gap: 9px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-soft); color: var(--ink); text-align: left; font: inherit; font-size: 13px; cursor: pointer; }
+.vocabulary-group strong { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; }
+.vocabulary-group strong span { font-size: 11px; color: var(--muted); font-weight: 400; }
+.vocabulary-group small { color: var(--muted); font-size: 12px; }
+.vocabulary-group > span { color: var(--green-dark); font-weight: 600; }
+.vocabulary-group.reviewed { border-color: #bad8ca; background: var(--green-soft); }
+.vocabulary-group.in_progress { border-color: #c8d8ea; background: #f1f6fb; }
+.vocabulary-group[aria-current="true"] { outline: 2px solid var(--green); outline-offset: -2px; }
 .vocabulary-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 16px; margin: 24px 0 18px; padding: 20px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
 .vocabulary-search { display: grid; flex: 1 1 250px; gap: 6px; font-size: 12px; color: var(--muted); }
 .vocabulary-search input { width: 100%; min-height: 42px; padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-soft); font-size: 14px; }

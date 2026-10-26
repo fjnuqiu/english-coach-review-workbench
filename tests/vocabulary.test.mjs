@@ -246,3 +246,19 @@ test("private guide metadata is retained and lexical enrichment keeps existing r
   assert.equal(after.next_due, before.next_due);
   assert.deepEqual(after.history, before.history);
 });
+
+test("fixed groups keep membership and numbers when history, due dates, and input order change", () => {
+  const items = Array.from({ length: 61 }, (_, index) => ({ id: `word-${index}`, item: `Word ${String(index).padStart(2, "0")}`, last_result: "pending", history: [], next_due: "2026-10-26" }));
+  const original = structuredClone(items);
+  const first = vocabulary.reviewGroups(items, "2026-10-26");
+  assert.deepEqual(first.map(group => group.total_count), [30, 30, 1]);
+  const progressed = items.map((item, index) => ({ ...item, next_due: "2026-10-27", history: index < 31 ? [{ result: "reviewed", date: "2026-10-26" }] : [] })).reverse();
+  const groups = vocabulary.reviewGroups(progressed, "2026-10-26");
+  assert.deepEqual(groups.map(group => group.items.map(item => item.id)), first.map(group => group.items.map(item => item.id)));
+  assert.deepEqual(groups.map(group => group.status), ["reviewed", "in_progress", "unreviewed"]);
+  assert.deepEqual(groups.map(group => group.reviewed_count), [30, 1, 0]);
+  assert.equal(groups[0].due_count, 0);
+  assert.deepEqual(items, original);
+  assert.equal(vocabulary.hasReviewed({ history: { unexpected: true }, last_result: "pending" }), false);
+  assert.equal(vocabulary.hasReviewed({ history: [], last_result: "pass" }), true);
+});

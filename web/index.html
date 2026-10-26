@@ -101,6 +101,12 @@
           <p>先看中文回想英文，点开词条查看英语、用法和例句。</p></div>
         <span class="vocabulary-summary" id="vocabularySummary"></span>
       </div>
+      <section class="vocabulary-groups" aria-labelledby="vocabularyGroupsTitle">
+        <div class="vocabulary-groups-heading"><h2 id="vocabularyGroupsTitle">复习分组</h2><p id="vocabularyGroupSummary" role="status"></p></div>
+        <p class="vocabulary-notice">按词库顺序每 30 条一组，进度根据已保存的复习记录统计。进行中的分组可以继续，已复习的分组可以再次复习。</p>
+        <div class="vocabulary-group-filters" id="vocabularyGroupFilters" aria-label="分组复习状态"></div>
+        <div class="vocabulary-group-list" id="vocabularyGroupList"></div>
+      </section>
       <div class="vocabulary-toolbar">
         <label class="vocabulary-search"><span>搜索表达或中文意思</span><input id="vocabularySearch" type="search" placeholder="例如 look forward to、期待" oninput="filterVocabulary()"></label>
         <label class="sort-field"><span>类型</span><select id="vocabularyKind" aria-label="类型" onchange="filterVocabulary()"><option value="all">全部表达</option><option value="word">单词</option><option value="phrase">短语</option><option value="expression">表达与句型</option></select></label>
@@ -111,7 +117,7 @@
         <button class="button secondary" id="vocabularyDueButton" type="button" onclick="startVocabularyReview('due')">复习到期表达（每组 30 个）</button>
         <button class="button primary" id="vocabularyPracticeButton" type="button" onclick="startVocabularyReview('filtered')">练习下一组（最多 30 个）</button>
       </div></div>
-      <p class="vocabulary-notice">每组最多 30 个，优先安排到期和复习次数较少的表达；不足 30 个时按实际数量开始。</p>
+      <p class="vocabulary-notice">点击分组开始或继续复习；也可以按来源、类型或关键词筛选，每轮最多 30 条。</p>
       <p class="vocabulary-notice" id="vocabularyNotice"></p>
       <div id="vocabularyList" class="vocabulary-list"></div>
       <button class="button quiet vocabulary-more" id="vocabularyMoreButton" type="button" onclick="showMoreVocabulary()" hidden>显示更多表达</button>
@@ -140,6 +146,7 @@
         <strong id="reviewEmptyTitle">Today's review is complete</strong>
         <p id="reviewEmptyDescription">Your next review is scheduled from the results you recorded.</p>
         <button class="button primary" id="vocabularyNextBatchButton" type="button" onclick="continueVocabularyReview()" hidden>继续下一组</button>
+        <button class="button quiet" id="reviewCompletedPreviousButton" type="button" onclick="goToPreviousReviewCard()" hidden>← 返回上一条</button>
       </div>
 
       <div class="review-card" id="reviewCard">
@@ -184,7 +191,7 @@
           <button class="button quiet" id="previousReviewButton" type="button" onclick="goToPreviousReviewCard()">← Previous</button>
           <button class="button primary" id="nextReviewButton" type="button" onclick="goToNextReviewCard()">下一个 →</button>
         </div>
-        <p class="vocabulary-notice">点击“下一个”记录本条已复习；掌握程度可用下方按钮单独选择。</p>
+        <p class="vocabulary-notice" id="reviewNavigationNotice">点击“下一个”记录本条已复习；掌握程度可用下方按钮单独选择。</p>
 
         <div class="grade-row" aria-label="Mastery rating">
           <button type="button" class="grade-button fail" onclick="submitReviewResult('fail')"><span>Not yet</span><small>Review tomorrow</small></button>

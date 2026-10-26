@@ -14,6 +14,7 @@ const state = {
   expandedCourseId: "",
   selectedCourseId: "",
   sessionCards: [],
+  sessionReviewedIds: [],
   sessionMode: "due",
   currentReviewIndex: 0,
   sessionInitialCount: 0,
@@ -33,6 +34,7 @@ const state = {
   localWorkspace: null,
   vocabularyLimit: 20,
   vocabularyReview: null,
+  vocabularyGroupFilter: "all",
   sessionKind: "course",
   reviewSaving: false,
   reviewGeneration: 0,
@@ -617,6 +619,50 @@ function filteredVocabulary() {
   return vocabulary.filterEntries(vocabulary.entries(state.vocabularyWorkspace), vocabularyFilterOptions());
 }
 
+function vocabularyGroups() {
+  return vocabulary.reviewGroups(vocabulary.entries(state.vocabularyWorkspace), selectedDate());
+}
+
+function renderVocabularyGroups() {
+  const groups = vocabularyGroups();
+  const labels = { all: "全部", reviewed: "已复习", in_progress: "进行中", unreviewed: "未复习" };
+  const count = status => status === "all" ? groups.length : groups.filter(group => group.status === status).length;
+  $("vocabularyGroupSummary").textContent = `${groups.length} 组 · 已复习 ${count("reviewed")} 组 · 进行中 ${count("in_progress")} 组 · 未复习 ${count("unreviewed")} 组`;
+  $("vocabularyGroupFilters").innerHTML = Object.entries(labels).map(([key, label]) =>
+    `<button type="button" aria-pressed="${state.vocabularyGroupFilter === key}" onclick="setVocabularyGroupFilter('${key}')">${label} ${count(key)}</button>`).join("");
+  const scrollTop = $("vocabularyGroupList").scrollTop;
+  $("vocabularyGroupList").innerHTML = groups.filter(group => state.vocabularyGroupFilter === "all" || group.status === state.vocabularyGroupFilter).map(group => `
+    <button class="vocabulary-group ${group.status}" type="button" onclick="startVocabularyGroup('${group.id}')"${state.vocabularyReview?.groupId === group.id ? ' aria-current="true"' : ""}>
+      <strong>第 ${group.number} 组<span>${labels[group.status]}</span></strong>
+      <small>已复习 ${group.reviewed_count} / ${group.total_count} 条</small>
+      <span>${group.status === "reviewed" ? "再复习" : group.status === "in_progress" ? "继续复习" : "开始复习"} →</span>
+    </button>`).join("") || '<p class="empty-state">当前没有这类分组。</p>';
+  $("vocabularyGroupList").scrollTop = scrollTop;
+}
+
+function setVocabularyGroupFilter(status) {
+  if (!["all", "reviewed", "in_progress", "unreviewed"].includes(status)) return;
+  state.vocabularyGroupFilter = status;
+  renderVocabularyGroups();
+}
+
+function nextVocabularyGroup(groupId) {
+  const groups = vocabularyGroups();
+  const current = groups.find(group => group.id === groupId);
+  return groups.find(group => group.number > (current?.number || 0) && group.status !== "reviewed")
+    || groups.find(group => group.id !== groupId && group.status !== "reviewed");
+}
+
+function startVocabularyGroup(groupId) {
+  const group = vocabularyGroups().find(entry => entry.id === groupId);
+  if (!group) return;
+  startVocabularyReview("group", "", {
+    mode: "group", groupId, batchNumber: group.number, completedIds: [],
+    initialReviewedIds: group.status === "reviewed" ? [] : group.reviewed_ids,
+    filters: { query: "", kind: "all", courseId: "all", dueOnly: false },
+  });
+}
+
 function vocabularyReviewCandidates(review) {
   if (!review || review.mode === "single") return [];
   const completed = new Set(review.completedIds);
@@ -640,6 +686,7 @@ function vocabularyTeachingHtml(item, { showEnglish = false } = {}) {
 }
 
 function renderVocabulary() {
+  renderVocabularyGroups();
   const items = filteredVocabulary();
   const visibleItems = items.slice(0, state.vocabularyLimit);
   const openIds = new Set([...document.querySelectorAll("#vocabularyList details[open]")].map(entry => entry.dataset.vocabEntry));
@@ -664,8 +711,16 @@ function filterVocabulary() { state.vocabularyLimit = 20; renderVocabulary(); }
 function showMoreVocabulary() { state.vocabularyLimit += 20; renderVocabulary(); }
 
 function startVocabularyReview(mode, itemId = "", continuation = null) {
+  const filters = vocabularyFilterOptions();
+  if (mode === "filtered" && !continuation && !filters.query && filters.kind === "all" && filters.courseId === "all" && !filters.dueOnly) {
+    const groups = vocabularyGroups();
+    const next = groups.find(group => group.status !== "reviewed") || groups[0];
+    if (next) startVocabularyGroup(next.id);
+    return;
+  }
   const review = continuation || { mode, filters: vocabularyFilterOptions(), completedIds: [], batchNumber: 1 };
   const items = mode === "single" ? vocabulary.entries(state.vocabularyWorkspace).filter(item => item.id === itemId)
+    : mode === "group" ? vocabularyGroups().find(group => group.id === review.groupId)?.items || []
     : vocabulary.reviewBatch(vocabularyReviewCandidates(review), { date: selectedDate() });
   if (!items.length) return;
   closeCourseReview();
@@ -674,21 +729,30 @@ function startVocabularyReview(mode, itemId = "", continuation = null) {
   state.selectedCourseId = vocabulary.GROUP_ID;
   state.sessionMode = "vocabulary";
   state.sessionCards = items.map(workspace.reviewCard);
+  state.sessionReviewedIds = [...(review.initialReviewedIds || [])];
+  state.currentReviewIndex = Math.max(0, state.sessionCards.findIndex(card => !state.sessionReviewedIds.includes(card.id)));
   state.sessionInitialCount = items.length;
   state.reviewSessionId = newFullReviewCompletionEventId();
-  $("activeCourseTitle").textContent = mode === "single" ? "单词与短语 · 单条练习" : `单词与短语 · 第 ${review.batchNumber} 组`;
+  $("activeCourseTitle").textContent = mode === "single" ? "单词与短语 · 单条练习"
+    : mode === "group" ? `单词与短语 · 第 ${review.batchNumber} 组` : `筛选表达 · 第 ${review.batchNumber} 轮`;
   $("activeCourseSummary").textContent = `本轮 ${items.length} 个表达${mode === "single" ? "" : "，每组最多 30 个；完成后可继续下一组。"}`;
   $("sessionLabel").textContent = "WORDS & PHRASES";
   $("reviewModeDescription").textContent = reviewModeMeta("vocabulary").description;
   $("reviewCoreBadge").hidden = true;
   $("courseReviewWorkspace").hidden = false;
   renderActiveCard();
+  renderVocabularyGroups();
   $("courseReviewWorkspace").scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function continueVocabularyReview() {
-  if (state.reviewSaving || state.sessionCards.length || !state.vocabularyReview) return;
+  if (state.reviewSaving || activeCard() || !state.vocabularyReview) return;
   const review = state.vocabularyReview;
+  if (review.mode === "group") {
+    const next = nextVocabularyGroup(review.groupId);
+    if (next) startVocabularyGroup(next.id);
+    return;
+  }
   startVocabularyReview(review.mode, "", { ...review, batchNumber: review.batchNumber + 1 });
 }
 
@@ -730,6 +794,7 @@ function closeCourseReview() {
   stopReviewSpeech();
   state.selectedCourseId = "";
   state.sessionCards = [];
+  state.sessionReviewedIds = [];
   state.sessionMode = "due";
   state.currentReviewIndex = 0;
   state.reviewSessionId = "";
@@ -763,7 +828,7 @@ function renderActiveCard() {
   const empty = !card;
   $("reviewEmptyState").hidden = !empty;
   $("reviewCard").hidden = empty;
-  const completedInSession = Math.max(0, state.sessionInitialCount - state.sessionCards.length);
+  const completedInSession = state.sessionReviewedIds.length;
   const denominator = Math.max(1, state.sessionInitialCount);
   const progress = Math.round((completedInSession / denominator) * 100);
   const modeMeta = reviewModeMeta(state.sessionMode);
@@ -772,9 +837,10 @@ function renderActiveCard() {
   $("reviewPositionText").textContent = empty ? `${state.sessionInitialCount} / ${state.sessionInitialCount}` : `${state.currentReviewIndex + 1} / ${state.sessionCards.length}`;
   $("reviewEmptyTitle").textContent = modeMeta.emptyTitle;
   $("reviewEmptyDescription").textContent = modeMeta.emptyDescription;
+  $("reviewCompletedPreviousButton").hidden = !empty || !state.sessionCards.length;
   $("vocabularyNextBatchButton").hidden = true;
   if (state.sessionKind === "vocabulary") {
-    $("reviewPositionText").textContent = `${empty ? state.sessionInitialCount : completedInSession + 1} / ${state.sessionInitialCount}`;
+    $("reviewPositionText").textContent = `${empty ? state.sessionInitialCount : state.currentReviewIndex + 1} / ${state.sessionInitialCount}`;
     if (empty) {
       const remaining = vocabularyReviewCandidates(state.vocabularyReview).length;
       $("reviewEmptyTitle").textContent = `本轮 ${state.sessionInitialCount} 个表达已复习完成`;
@@ -785,6 +851,15 @@ function renderActiveCard() {
           : "复习记录已保存，当前分组已全部完成。";
       $("vocabularyNextBatchButton").hidden = !remaining;
       $("vocabularyNextBatchButton").textContent = `继续下一组（${Math.min(vocabulary.REVIEW_BATCH_SIZE, remaining)} 个）`;
+      if (state.vocabularyReview?.mode === "group") {
+        const next = nextVocabularyGroup(state.vocabularyReview.groupId);
+        const unfinished = vocabularyGroups().filter(group => group.id !== state.vocabularyReview.groupId && group.status !== "reviewed").length;
+        $("reviewEmptyDescription").textContent = unfinished
+          ? `本组复习记录已保存，还有 ${unfinished} 组未完成。可以休息一下，再继续复习。`
+          : "本组复习记录已保存，全部分组都已复习过。";
+        $("vocabularyNextBatchButton").hidden = !next;
+        $("vocabularyNextBatchButton").textContent = next ? `继续第 ${next.number} 组（${next.total_count} 条）` : "全部分组已完成";
+      }
     }
   }
   updateReviewNavigation();
@@ -796,13 +871,17 @@ function renderActiveCard() {
   $("vocabularyExplanation").hidden = true;
   const prompt = card.prompt_sentence || card.prompt || "Recall how to say this in English.";
   $("reviewPrompt").textContent = prompt;
+  $("reviewNavigationNotice").textContent = state.sessionReviewedIds.includes(card.id)
+    ? "本条已复习，点击下一个不会重复计数；仍可单独调整掌握程度。"
+    : "点击“下一个”记录本条已复习；掌握程度可用下方按钮单独选择。";
 }
 
 function updateReviewNavigation() {
   $("previousReviewButton").disabled = state.reviewSaving || state.currentReviewIndex <= 0;
+  $("reviewCompletedPreviousButton").disabled = state.reviewSaving || state.currentReviewIndex <= 0;
   $("nextReviewButton").disabled = state.reviewSaving || !activeCard();
   $("nextReviewButton").textContent = state.reviewSaving ? "保存中…"
-    : state.sessionCards.length === 1 ? "完成本轮 ✓" : "下一个 →";
+    : state.currentReviewIndex === state.sessionCards.length - 1 ? "完成本轮 ✓" : "下一个 →";
   $("vocabularyNextBatchButton").disabled = state.reviewSaving;
   document.querySelectorAll(".grade-button").forEach(button => {
     button.disabled = state.reviewSaving || !activeCard();
@@ -888,7 +967,8 @@ async function saveCurrentReview(result) {
   if (!card || state.reviewSaving) return;
   const local = state.localBackendAvailable === true;
   const userId = state.user?.id;
-  if (!local && !userId) {
+  const needsSave = result !== "reviewed" || !state.sessionReviewedIds.includes(card.id);
+  if (needsSave && !local && !userId) {
     showToast("请先登录，以保存并同步复习进度。");
     openAccountDialog();
     return;
@@ -896,16 +976,19 @@ async function saveCurrentReview(result) {
   const generation = state.reviewGeneration;
   const eventId = `${state.reviewSessionId}:${card.id}:${result}`;
   const date = selectedDate();
+  const roundWasRecorded = state.fullReviewCompletionRecorded;
   state.reviewSaving = true;
   updateReviewNavigation();
   try {
-    if (local && state.sessionKind !== "vocabulary") {
+    // A saved card only advances the viewing position. The round acknowledgement
+    // below can still be retried if its earlier request failed.
+    if (needsSave && local && state.sessionKind !== "vocabulary") {
       await apiJson("/api/review-result", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ item_id: card.id, result, date, event_id: eventId }),
       });
-    } else {
+    } else if (needsSave) {
       const current = local ? state.localWorkspace
         : { courses: state.cloudCourses, review_items: state.cloudReviewItems };
       const updated = { ...current, review_items: workspace.recordReviewResult(
@@ -923,19 +1006,19 @@ async function saveCurrentReview(result) {
       }
     }
     if (generation !== state.reviewGeneration) return;
+    if (!state.sessionReviewedIds.includes(card.id)) state.sessionReviewedIds.push(card.id);
     if (!await maybeRecordFullContentCompletion()) return;
     if (generation !== state.reviewGeneration) return;
     if (state.sessionKind === "vocabulary" && state.vocabularyReview) {
-      state.vocabularyReview.completedIds.push(card.id);
+      if (!state.vocabularyReview.completedIds.includes(card.id)) state.vocabularyReview.completedIds.push(card.id);
     }
-    const index = state.sessionCards.findIndex(item => item.id === card.id);
-    if (index >= 0) state.sessionCards.splice(index, 1);
-    state.currentReviewIndex = Math.min(state.currentReviewIndex, Math.max(0, state.sessionCards.length - 1));
+    state.currentReviewIndex += 1;
     renderActiveCard();
-    await refreshDashboard();
-    if (local) scheduleCloudSync();
+    const progressChanged = needsSave || state.fullReviewCompletionRecorded !== roundWasRecorded;
+    if (progressChanged) await refreshDashboard();
+    if (local && progressChanged) scheduleCloudSync();
     const labels = { reviewed: "已记录本条复习。", pass: "Marked as got it", shaky: "Marked as shaky", fail: "Scheduled for an early retry" };
-    showToast(labels[result]);
+    showToast(needsSave ? labels[result] : "本条已记录，未重复计数。");
   } catch (error) {
     showToast(`Could not save: ${error.message}`);
   } finally {
@@ -948,7 +1031,8 @@ async function maybeRecordFullContentCompletion() {
   if (
     state.sessionMode !== "full"
     || state.fullReviewCompletionRecorded
-    || state.sessionCards.length !== 1
+    || !state.sessionCards.length
+    || !state.sessionCards.every(card => state.sessionReviewedIds.includes(card.id))
   ) return true;
 
   const generation = state.reviewGeneration;

@@ -54,7 +54,7 @@ function fixture({ kind = "course", mode = "full", count = 2, local = false, sav
     apiJson = fixtureApi;
     scheduleCloudSync = () => {};
     renderCourses = () => {};
-    globalThis.frontend = { state, goToNextReviewCard, submitReviewResult, renderActiveCard, startCourseReview, closeCourseReview, startVocabularyReview, continueVocabularyReview, renderVocabulary, vocabularyTeachingHtml, revealReviewAnswer };
+    globalThis.frontend = { state, activeCard, goToPreviousReviewCard, goToNextReviewCard, submitReviewResult, renderActiveCard, startCourseReview, closeCourseReview, startVocabularyReview, continueVocabularyReview, startVocabularyGroup, vocabularyGroups, setVocabularyGroupFilter, renderVocabulary, vocabularyTeachingHtml, revealReviewAnswer };
   `, context);
   const frontend = context.frontend;
   Object.assign(frontend.state, {
@@ -76,7 +76,7 @@ test("Next saves each card and counts a full round only after submitting the las
   assert.equal(view.calls.courses.length, 0);
   await view.goToNextReviewCard();
   assert.equal(view.calls.items[0].history[0].result, "reviewed");
-  assert.equal(view.state.sessionCards[0].id, "card-1");
+  assert.equal(view.activeCard().id, "card-1");
   assert.equal(view.node("sessionProgressText").textContent, "1 complete");
   assert.equal(view.calls.courses.length, 0);
   assert.equal(view.node("nextReviewButton").disabled, false);
@@ -84,7 +84,8 @@ test("Next saves each card and counts a full round only after submitting the las
   await view.goToNextReviewCard();
   assert.equal(view.calls.courses.length, 1);
   assert.equal(view.calls.courses[0].full_review_events.length, 1);
-  assert.equal(view.state.sessionCards.length, 0);
+  assert.equal(view.activeCard(), null);
+  assert.equal(view.state.sessionCards.length, 2);
   assert.equal(view.node("reviewEmptyState").hidden, false);
   await view.goToNextReviewCard();
   assert.equal(view.calls.items.length, 2);
@@ -110,7 +111,8 @@ test("repeated clicks while saving do not duplicate reviews or skip cards", asyn
   assert.equal(view.calls.items.length, 1);
   finish();
   await pending;
-  assert.equal(view.state.sessionCards.length, 1);
+  assert.equal(view.state.currentReviewIndex, 1);
+  assert.equal(view.state.sessionReviewedIds.length, 1);
 });
 
 test("a failed round save can be retried without counting the final card twice", async () => {
@@ -123,7 +125,9 @@ test("a failed round save can be retried without counting the final card twice",
   await view.goToNextReviewCard();
   assert.equal(view.state.cloudReviewItems[0].history.length, 1);
   assert.equal(view.state.cloudCourses[0].full_review_events.length, 1);
-  assert.equal(view.state.sessionCards.length, 0);
+  assert.equal(view.activeCard(), null);
+  assert.equal(view.calls.items.length, 1);
+  assert.equal(view.calls.refreshes, 1);
 });
 
 test("switching courses while saving does not advance or complete the new session", async () => {
@@ -143,13 +147,13 @@ test("Next works for independent vocabulary and local courses without creating f
   await vocabulary.goToNextReviewCard();
   assert.equal(vocabulary.calls.items.length, 1);
   assert.equal(vocabulary.calls.courses.length, 0);
-  assert.equal(vocabulary.state.sessionCards.length, 0);
+  assert.equal(vocabulary.activeCard(), null);
   const local = fixture({ local: true, mode: "due" });
   await local.goToNextReviewCard();
   assert.equal(local.calls.local[0].path, "/api/review-result");
   assert.equal(local.calls.local[0].body.result, "reviewed");
   assert.ok(local.calls.local[0].body.event_id);
-  assert.equal(local.state.sessionCards.length, 1);
+  assert.equal(local.state.currentReviewIndex, 1);
 });
 
 test("vocabulary completes 30/30/1 batches without repeats or a false full-course round", async () => {
@@ -162,8 +166,8 @@ test("vocabulary completes 30/30/1 batches without repeats or a false full-cours
   const seen = new Set();
   for (const batchSize of [30, 30, 1]) {
     assert.equal(view.state.sessionInitialCount, batchSize);
-    while (view.state.sessionCards.length) {
-      const id = view.state.sessionCards[0].id;
+    while (view.activeCard()) {
+      const id = view.activeCard().id;
       assert.ok(!seen.has(id), id);
       seen.add(id);
       await view.goToNextReviewCard();
@@ -174,7 +178,7 @@ test("vocabulary completes 30/30/1 batches without repeats or a false full-cours
     if (seen.size < 61) view.continueVocabularyReview();
   }
   view.continueVocabularyReview();
-  assert.equal(view.state.sessionCards.length, 0);
+  assert.equal(view.activeCard(), null);
   assert.equal(view.calls.items.length, 61);
   assert.equal(view.calls.courses.length, 0);
   assert.ok(view.state.cloudReviewItems.every(item => item.history.length === 1));
@@ -184,7 +188,7 @@ test("reopening vocabulary uses saved progress instead of restarting the first b
   const view = fixture({ kind: "vocabulary", mode: "vocabulary", count: 65 });
   view.startVocabularyReview("filtered");
   const first = new Set(view.state.sessionCards.map(card => card.id));
-  while (view.state.sessionCards.length) await view.goToNextReviewCard();
+  while (view.activeCard()) await view.goToNextReviewCard();
   view.closeCourseReview();
   view.startVocabularyReview("filtered");
   assert.equal(view.state.sessionCards.length, 30);
@@ -224,4 +228,71 @@ test("recall prompt stays Chinese-only while revealed meaning retains escaped gr
   view.renderActiveCard();
   assert.equal(view.node("vocabularyExplanation").hidden, true);
   assert.equal(view.node("reviewPrompt").textContent, "陪同");
+});
+
+test("Previous returns to saved cards and Next moves forward without duplicate reviews or rounds", async () => {
+  for (const kind of ["course", "vocabulary"]) {
+    const view = fixture({ kind, mode: kind === "course" ? "full" : "vocabulary", count: 2 });
+    await view.goToNextReviewCard();
+    assert.equal(view.node("previousReviewButton").disabled, false);
+    view.goToPreviousReviewCard();
+    assert.equal(view.activeCard().id, "card-0");
+    assert.equal(view.node("sessionProgressText").textContent, "1 complete");
+    assert.match(view.node("reviewNavigationNotice").textContent, /不会重复计数/);
+    await view.goToNextReviewCard();
+    assert.equal(view.activeCard().id, "card-1");
+    assert.equal(view.calls.items.length, 1);
+    await view.goToNextReviewCard();
+    assert.equal(view.activeCard(), null);
+    assert.equal(view.node("reviewCompletedPreviousButton").hidden, false);
+    view.goToPreviousReviewCard();
+    assert.equal(view.activeCard().id, "card-1");
+    await view.goToNextReviewCard();
+    assert.equal(view.calls.items.length, 2);
+    assert.equal(view.calls.courses.length, kind === "course" ? 1 : 0);
+    assert.ok(view.state.cloudReviewItems.every(item => item.history.length === 1));
+  }
+});
+
+test("group status is derived from saved progress and a partial group resumes with Previous available", async () => {
+  const view = fixture({ kind: "vocabulary", mode: "vocabulary", count: 61 });
+  view.renderVocabulary();
+  assert.match(view.node("vocabularyGroupSummary").textContent, /3 组 · 已复习 0 组 · 进行中 0 组 · 未复习 3 组/);
+  view.startVocabularyGroup("vocabulary-group-1");
+  const first = view.activeCard().id;
+  await view.goToNextReviewCard();
+  view.renderVocabulary();
+  assert.match(view.node("vocabularyGroupSummary").textContent, /进行中 1 组 · 未复习 2 组/);
+  view.closeCourseReview();
+  view.startVocabularyGroup("vocabulary-group-1");
+  assert.equal(view.state.currentReviewIndex, 1);
+  assert.equal(view.node("previousReviewButton").disabled, false);
+  view.goToPreviousReviewCard();
+  assert.equal(view.activeCard().id, first);
+  await view.goToNextReviewCard();
+  assert.equal(view.calls.items.length, 1);
+  while (view.activeCard()) await view.goToNextReviewCard();
+  view.renderVocabulary();
+  assert.match(view.node("vocabularyGroupSummary").textContent, /已复习 1 组 · 进行中 0 组 · 未复习 2 组/);
+  view.setVocabularyGroupFilter("reviewed");
+  assert.match(view.node("vocabularyGroupList").innerHTML, /第 1 组/);
+  assert.doesNotMatch(view.node("vocabularyGroupList").innerHTML, /第 2 组/);
+  view.continueVocabularyReview();
+  assert.equal(view.state.vocabularyReview.groupId, "vocabulary-group-2");
+  assert.equal(view.state.sessionCards.length, 30);
+  assert.equal(view.state.sessionReviewedIds.length, 0);
+});
+
+test("reviewed groups can be deliberately repeated, while search sessions do not masquerade as fixed groups", async () => {
+  const view = fixture({ kind: "vocabulary", mode: "vocabulary", count: 2 });
+  view.startVocabularyGroup("vocabulary-group-1");
+  while (view.activeCard()) await view.goToNextReviewCard();
+  view.startVocabularyGroup("vocabulary-group-1");
+  assert.equal(view.state.sessionReviewedIds.length, 0);
+  await view.goToNextReviewCard();
+  assert.equal(view.state.cloudReviewItems.find(item => item.id === view.state.sessionCards[0].id).history.length, 2);
+  view.node("vocabularySearch").value = "Example 1";
+  view.startVocabularyReview("filtered");
+  assert.match(view.node("activeCourseTitle").textContent, /筛选表达/);
+  assert.equal(view.state.sessionCards.length, 1);
 });

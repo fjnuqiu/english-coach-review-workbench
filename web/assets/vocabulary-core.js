@@ -160,5 +160,27 @@
     }).slice(0, REVIEW_BATCH_SIZE);
   }
 
-  root.EnglishCoachVocabulary = { GROUP_ID, REVIEW_BATCH_SIZE, withLibrary, courseWorkspace, entries, filterEntries, reviewBatch, isStandalone, normalize };
+  function hasReviewed(item) {
+    return (Array.isArray(item.history) && item.history.some(event => ["reviewed", "pass", "shaky", "fail"].includes(event?.result)))
+      || ["pass", "shaky", "fail"].includes(item.last_result);
+  }
+
+  function reviewGroups(items, date = "") {
+    const sorted = [...items].sort((a, b) => a.item.localeCompare(b.item, "en") || a.id.localeCompare(b.id));
+    const groups = [];
+    for (let offset = 0; offset < sorted.length; offset += REVIEW_BATCH_SIZE) {
+      const cards = sorted.slice(offset, offset + REVIEW_BATCH_SIZE);
+      const reviewedIds = cards.filter(hasReviewed).map(item => item.id);
+      const number = groups.length + 1;
+      groups.push({
+        id: `vocabulary-group-${number}`, number, items: cards,
+        reviewed_ids: reviewedIds, reviewed_count: reviewedIds.length, total_count: cards.length,
+        due_count: cards.filter(item => String(item.next_due || "9999-12-31") <= date).length,
+        status: reviewedIds.length === cards.length ? "reviewed" : reviewedIds.length ? "in_progress" : "unreviewed",
+      });
+    }
+    return groups;
+  }
+
+  root.EnglishCoachVocabulary = { GROUP_ID, REVIEW_BATCH_SIZE, withLibrary, courseWorkspace, entries, filterEntries, reviewBatch, reviewGroups, hasReviewed, isStandalone, normalize };
 })(typeof globalThis !== "undefined" ? globalThis : this);
